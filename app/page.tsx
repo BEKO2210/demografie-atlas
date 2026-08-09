@@ -1,9 +1,9 @@
-"use client";
-
-import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
-import { useEffect } from "react";
+import type { CSSProperties } from "react";
 import { AtlasFooter } from "./components/atlas-footer";
+import { Noise } from "./components/noise";
 import { InteractiveWorld } from "./components/interactive-world";
+import { PointerSpotlight } from "./components/pointer-spotlight";
+import { RevealObserver } from "./components/reveal-observer";
 import { countries, type Country } from "./data/countries";
 import { sitePath } from "./data/site";
 import { AtlasMark } from "./components/atlas-mark";
@@ -61,36 +61,11 @@ function CountryCard({ country, index }: { country: Country; index: number }) {
 }
 
 export default function AtlasHome() {
-  useEffect(() => {
-    document.documentElement.classList.add("motion-ready");
-    const elements = document.querySelectorAll(".reveal");
-    if (!("IntersectionObserver" in window)) {
-      elements.forEach((element) => element.classList.add("is-visible"));
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
-        }
-      }),
-      { threshold: 0.1, rootMargin: "0px 0px -36px" },
-    );
-    elements.forEach((element) => observer.observe(element));
-    return () => observer.disconnect();
-  }, []);
-
-  const moveSpotlight = (event: ReactPointerEvent<HTMLElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    event.currentTarget.style.setProperty("--pointer-x", `${event.clientX - rect.left}px`);
-    event.currentTarget.style.setProperty("--pointer-y", `${event.clientY - rect.top}px`);
-  };
-
   return (
-    <main className="atlas-home" onPointerMove={moveSpotlight}>
-      <div className="noise" aria-hidden="true" />
-      <div className="atlas-spotlight" aria-hidden="true" />
+    <main className="atlas-home">
+      <Noise />
+      <PointerSpotlight />
+      <RevealObserver />
 
       <nav className="atlas-nav">
         <div className="wrap atlas-nav-inner">

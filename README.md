@@ -45,3 +45,14 @@ Impressum und Datenschutzerklärung sind mit den echten Betreiberangaben ausgef�
 Live: https://beko2210.github.io/demografie-atlas/
 
 Die technische Übergabe mit exakten GitHub-Schritten und Architekturhinweisen steht in [`CLAUDE_HANDOFF.md`](./CLAUDE_HANDOFF.md).
+
+## Weltdaten und Rauschtextur neu erzeugen
+
+```bash
+npm run build:assets
+```
+
+Erzeugt `public/data/world.json` (vereinfachte 50m-Topologie plus kompakte Ländermetadaten)
+und `public/assets/noise.png`. Beide Dateien sind eingecheckt; der Befehl ist nur nötig,
+wenn `world-atlas` oder `world-countries` aktualisiert werden. Der Generator prüft selbst,
+dass alle 241 Gebiete Fläche behalten, und lässt betroffene Bögen sonst unvereinfacht.

@@ -13,7 +13,8 @@
     "test": "npm run build && node --test tests/rendered-html.test.mjs",
     "validate:artifact": "bash scripts/validate-artifact.sh",
     "lint": "bash scripts/sites-env.sh -- eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "bash scripts/sites-env.sh -- drizzle-kit generate"
+    "db:generate": "bash scripts/sites-env.sh -- drizzle-kit generate",
+    "build:assets": "node scripts/build-world-data.mjs && node scripts/build-noise.mjs && node scripts/build-avif.mjs"
   },
   "dependencies": {
     "d3-geo": "^3.1.1",
@@ -23,9 +24,7 @@
     "react-dom": "19.2.6",
     "react-globe.gl": "^2.38.0",
     "three": "^0.185.1",
-    "topojson-client": "^3.1.0",
-    "world-atlas": "^2.0.2",
-    "world-countries": "^5.1.0"
+    "topojson-client": "^3.1.0"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",
@@ -47,6 +46,8 @@
     "typescript": "5.9.3",
     "vinext": "0.0.50",
     "vite": "8.0.13",
+    "world-atlas": "^2.0.2",
+    "world-countries": "^5.1.0",
     "wrangler": "4.92.0"
   },
   "type": "module",

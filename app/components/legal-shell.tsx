@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { AtlasFooter } from "./atlas-footer";
 import { sitePath } from "../data/site";
 import { AtlasMark } from "./atlas-mark";
+import { Noise } from "./noise";
 
 export function LegalShell({
   kicker,
@@ -16,7 +17,7 @@ export function LegalShell({
 }) {
   return (
     <main className="legal-page">
-      <div className="noise" aria-hidden="true" />
+      <Noise />
       <nav className="atlas-nav legal-nav">
         <div className="wrap atlas-nav-inner">
           <a className="brand" href={sitePath()}>
