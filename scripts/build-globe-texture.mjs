@@ -21,20 +21,19 @@ import { feature } from "topojson-client";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Ausgabegröße. Bei einem Globus von höchstens 720 px reicht das deutlich. */
-const WIDTH = 4096;
-const HEIGHT = 2048;
+/**
+ * Ausgabegröße. 8192 ist die Grenze, die praktisch jede GPU noch kann; für
+ * Geräte darunter entsteht zusätzlich eine 4096er Fassung.
+ */
+const WIDTH = Number(process.env.GLOBE_TEXTURE_WIDTH ?? 8192);
+const HEIGHT = WIDTH / 2;
 /** Überabtastung für weiche Kanten; wird danach heruntergerechnet. */
-const SUPERSAMPLE = 2;
+const SUPERSAMPLE = Number(process.env.GLOBE_TEXTURE_SUPERSAMPLE ?? 2);
 const W = WIDTH * SUPERSAMPLE;
 const H = HEIGHT * SUPERSAMPLE;
 
 /** Grundfarbe der Kugel (bisher: MeshPhongMaterial color #07101f). */
 const BASE = [7, 16, 31];
-
-/** Deckkraft über die Grundfarbe legen — ergibt den bisherigen Mischwert. */
-const over = (rgb, alpha, base = BASE) =>
-  rgb.map((value, index) => value * alpha + base[index] * (1 - alpha));
 
 /**
  * Die Textur wird selbstleuchtend gezeichnet, die frühere Darstellung dagegen
@@ -48,31 +47,27 @@ const LIFT = [24.2, 30.3, 41.0];
 const asRendered = (blend) =>
   blend.map((value, index) => Math.max(0, Math.min(255, Math.round(value * GAIN[index] + LIFT[index]))));
 
-const OCEAN = asRendered(BASE);
-const FILL_DEFAULT = asRendered(over([74, 91, 130], 0.28));
-const FILL_ATLAS = asRendered(over([116, 157, 255], 0.42));
-const FILL_LIVE = asRendered(over([94, 255, 194], 0.72));
-const STROKE_ALPHA = 0.18;
-const STROKE_RGB = [150, 187, 255];
-
 /**
- * Die Länder-Registry liegt als TypeScript vor; für dieses Build-Skript werden
- * nur Kürzel und Status gebraucht — beides wird direkt aus der Quelle gelesen,
- * damit es keine zweite Liste gibt, die auseinanderlaufen kann.
+ * Lesbarkeit: die frühere Abstufung zwischen Ozean und Land war so knapp, dass
+ * auf Telefonen weder Kontinente noch Grenzen zu erkennen waren. Land und
+ * Grenzlinien sind deshalb angehoben — die Art Direction bleibt dunkel, aber
+ * die Karte ist als Karte lesbar.
  */
-function readAtlasRegistry() {
-  const source = readFileSync(join(root, "app/data/countries.ts"), "utf8");
-  const entries = new Map();
-  const pattern = /code:\s*"([A-Z]{2})",\s*\n\s*status:\s*"(live|next|planned)"/g;
-  for (const match of source.matchAll(pattern)) entries.set(match[1], match[2]);
-  if (entries.size === 0) throw new Error("Länder-Registry konnte nicht gelesen werden");
-  return entries;
-}
+const OCEAN = asRendered(BASE);
+/**
+ * Alle Gebiete tragen dieselbe Farbe. Vorher hoben sich Deutschland und die
+ * geplanten Atlas-Länder farblich ab — auf einer Startseite, die alle Länder
+ * gleich behandeln soll, ist das eine Sonderrolle, die nicht hingehört.
+ * Hervorgehoben wird nur noch, was der Besucher selbst berührt oder auswählt.
+ */
+const FILL_DEFAULT = [60, 78, 110];
+const STROKE_WIDTH = 3;
 
-const atlasStatusByCode = readAtlasRegistry();
+const STROKE_ALPHA = 0.5;
+const STROKE_RGB = [176, 208, 255];
+
 
 const world = JSON.parse(readFileSync(join(root, "public/data/world.json"), "utf8"));
-const metaById = new Map(world.meta.map((entry) => [entry.id, entry]));
 const features = feature(world.topology, world.topology.objects.countries).features;
 
 const pixels = new Uint8Array(W * H * 3);
@@ -171,14 +166,16 @@ function strokeRings(rings) {
       const y2 = toY(ring[index + 1][1]);
       if (Math.max(x1, x2) < 0 || Math.min(x1, x2) >= W) continue;
       const steps = Math.max(1, Math.ceil(Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1))));
+      const reach = Math.floor(STROKE_WIDTH / 2);
       for (let step = 0; step <= steps; step += 1) {
         const t = step / steps;
-        setPixel(
-          Math.round(x1 + (x2 - x1) * t),
-          Math.round(y1 + (y2 - y1) * t),
-          STROKE_RGB,
-          STROKE_ALPHA,
-        );
+        const px = Math.round(x1 + (x2 - x1) * t);
+        const py = Math.round(y1 + (y2 - y1) * t);
+        for (let dy = -reach; dy <= reach; dy += 1) {
+          for (let dx = -reach; dx <= reach; dx += 1) {
+            setPixel(px + dx, py + dy, STROKE_RGB, STROKE_ALPHA);
+          }
+        }
       }
     }
   }
@@ -192,14 +189,11 @@ const WRAPS = [-360, 0, 360];
 const shiftRing = (ring, delta) => ring.map(([lon, lat]) => [lon + delta, lat]);
 
 for (const item of features) {
-  const meta = metaById.get(String(Number(item.id)));
-  const status = meta ? atlasStatusByCode.get(meta.cca2) : undefined;
-  const color = status === "live" ? FILL_LIVE : status ? FILL_ATLAS : FILL_DEFAULT;
   for (const rings of polygonsOf(item.geometry)) {
     const unwrapped = rings.map(unwrapRing);
     for (const delta of WRAPS) {
       const shifted = unwrapped.map((ring) => shiftRing(ring, delta));
-      fillPolygon(shifted, color);
+      fillPolygon(shifted, FILL_DEFAULT);
       strokeRings(shifted);
     }
   }
@@ -263,5 +257,6 @@ const png = Buffer.concat([
 ]);
 
 mkdirSync(join(root, "public/assets"), { recursive: true });
-writeFileSync(join(root, "public/assets/globe-texture.png"), png);
-console.log(`globe-texture.png: ${WIDTH}×${HEIGHT}, ${(png.length / 1024).toFixed(1)} kB`);
+const name = WIDTH >= 8192 ? "globe-texture-8k.png" : "globe-texture.png";
+writeFileSync(join(root, `public/assets/${name}`), png);
+console.log(`${name}: ${WIDTH}×${HEIGHT}, ${(png.length / 1024).toFixed(1)} kB`);

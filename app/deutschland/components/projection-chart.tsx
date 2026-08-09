@@ -12,8 +12,12 @@ export function ProjectionChart() {
   ].join(" ");
 
   return (
-    <div className="projection-chart" aria-label="Projektionsspanne der Bevölkerung bis 2070">
-      <svg viewBox="0 0 680 270" role="img">
+    <div className="projection-chart" role="group" aria-label="Projektionsspanne der Bevölkerung bis 2070">
+      <svg
+        viewBox="0 0 680 270"
+        role="img"
+        aria-label="Liniendiagramm: Bevölkerung Deutschlands 2025–2070 in Millionen. Moderate Variante von 83,5 auf 74,7 Mio.; Spannweite aller Varianten zwischen 63,9 und 86,5 Mio."
+      >
         <defs>
           <linearGradient id="rangeGradient" x1="0" x2="1">
             <stop offset="0" stopColor="#f0c878" stopOpacity=".16" />
@@ -30,6 +34,7 @@ export function ProjectionChart() {
             <text x="28" y={y(tick) + 4} className="projection-axis">{tick}</text>
           </g>
         ))}
+        <text x="28" y={y(90) - 14} className="projection-axis projection-unit">Mio.</text>
         <polygon points={band} fill="url(#rangeGradient)" />
         <path d={line(upper)} className="range-line" />
         <path d={line(lower)} className="range-line" />

@@ -4,9 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ComponentType } from "react";
 import { countries } from "../data/countries";
 import { sitePath } from "../data/site";
+import { CountryFlag } from "./country-flag";
 import { WORLD_TERRITORY_COUNT } from "../data/world-constants";
 import type { WorldCountryMeta, WorldData } from "../data/world-types";
 import type { WorldRendererProps } from "./world/shared";
+import { useWorldSelection } from "./world/selection-context";
 import { usePrefersReducedMotion } from "./use-reduced-motion";
 
 const atlasCountryByCode = new Map(countries.map((country) => [country.code, country]));
@@ -50,8 +52,19 @@ export function InteractiveWorld() {
   const [ready, setReady] = useState(false);
   const [world, setWorld] = useState<WorldData | null>(null);
   const [Renderer, setRenderer] = useState<Renderer | null>(null);
+  const [mode, setMode] = useState<"webgl" | "svg" | null>(null);
+  const [coarsePointer, setCoarsePointer] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
   const activated = useRef(false);
+
+  // Der Hinweistext muss zum Gerät passen: auf Touch wird gewischt, nicht gezogen.
+  useEffect(() => {
+    const query = window.matchMedia("(pointer: coarse)");
+    const update = () => setCoarsePointer(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -66,6 +79,19 @@ export function InteractiveWorld() {
     return () => observer.disconnect();
   }, []);
 
+  /**
+   * Anfragen aus dem Flaggen-Laufstreifen. Kommt eine, bevor die Weltdaten da
+   * sind, stößt sie das Laden an und wird nachgeholt, sobald sie vorliegen.
+   */
+  const { registerHandler } = useWorldSelection();
+  const pendingCode = useRef<string | null>(null);
+  const worldRef = useRef<WorldData | null>(null);
+
+  const applyCode = useCallback((cca2: string, data: WorldData) => {
+    const match = [...data.metaById.values()].find((entry) => entry.cca2 === cca2);
+    if (match) setSelected(match);
+  }, []);
+
   const activate = useCallback(() => {
     if (activated.current) return;
     activated.current = true;
@@ -78,13 +104,28 @@ export function InteractiveWorld() {
         : import("./world/svg-globe").then((module) => module.default as Renderer),
     ])
       .then(([data, component]) => {
+        worldRef.current = data;
         setWorld(data);
         setRenderer(() => component);
+        setMode(webGl ? "webgl" : "svg");
+        const pending = pendingCode.current;
+        pendingCode.current = null;
+        if (pending) applyCode(pending, data);
       })
       .catch(() => {
         activated.current = false;
       });
-  }, []);
+  }, [applyCode]);
+
+  useEffect(() => registerHandler((cca2) => {
+    const data = worldRef.current;
+    if (data) {
+      applyCode(cca2, data);
+      return;
+    }
+    pendingCode.current = cca2;
+    activate();
+  }), [registerHandler, applyCode, activate]);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -126,9 +167,23 @@ export function InteractiveWorld() {
   const onReady = useCallback(() => setReady(true), []);
   const onSelect = useCallback((meta: WorldCountryMeta) => setSelected(meta), []);
 
+  /** Zoom gibt es nur im WebGL-Globus; das SVG-Modell kennt keine Zoomstufe. */
+  const drag = coarsePointer ? "Wischen zum Drehen" : "Ziehen zum Drehen";
+  const instructions = mode === "svg"
+    ? `${drag} · Pfeiltasten am Globus · Land antippen`
+    : `${drag} · Plus und Minus zum Zoomen · Land ${coarsePointer ? "antippen" : "anklicken"}`;
+
   const selectedAtlasCountry = selected ? atlasCountryByCode.get(selected.cca2) : undefined;
   const selectedStatus = selectedAtlasCountry?.status ?? "planned";
   const selectedName = selectedAtlasCountry?.name ?? selected?.name ?? "";
+  /**
+   * Dieselbe Sprache wie im Ländergitter. „Auswählbar“ war irreführend: das Land
+   * ist im Moment der Anzeige bereits ausgewählt.
+   */
+  const statusLabel = !selectedAtlasCountry
+    ? "Kein Atlas"
+    : selectedStatus === "live" ? "Live"
+      : selectedStatus === "next" ? "Als Nächstes" : "Geplant";
 
   return (
     <div className="interactive-world" ref={stageRef}>
@@ -153,21 +208,38 @@ export function InteractiveWorld() {
       {selected && (
         <div className="globe-interface" aria-live="polite">
           <div className="globe-selection-top">
-            <span className="globe-selected-flag" role="img" aria-label={`Flagge ${selectedName}`}>{selected.flag}</span>
-            <span className={`country-status status-${selectedStatus}`}><i /> {selectedStatus === "live" ? "Live" : selectedStatus === "next" ? "Als Nächstes" : "Auswählbar"}</span>
+            <span className="globe-selected-flag"><CountryFlag code={selected.cca2} name={selectedName} /></span>
+            <span className={`country-status status-${selectedStatus}`}><i /> {statusLabel}</span>
           </div>
           <span className="globe-selection-code">{selected.cca2} / {selected.region}</span>
           <strong>{selectedName}</strong>
           <small>{selected.capital ? `Hauptstadt · ${selected.capital}` : "Interaktives Länderprofil"}</small>
-          {selectedStatus === "live" ? (
-            <a href={sitePath(`/${selectedAtlasCountry?.slug}`)}>Atlas öffnen <span>↗</span></a>
+          {selectedAtlasCountry ? (
+            <a href={sitePath(`/${selectedAtlasCountry.slug}`)}>
+              {selectedStatus === "live" ? "Atlas öffnen" : "Vorschau ansehen"} <span>↗</span>
+            </a>
           ) : (
             <span className="globe-planned-label">Datenstory in Vorbereitung</span>
           )}
         </div>
       )}
 
-      <div className="globe-instructions"><i /> Ziehen zum Drehen <b>·</b> Scrollen zum Zoomen <b>·</b> Land anklicken</div>
+      {/*
+        Textfassung des Globus: das Canvas selbst lässt sich weder vorlesen noch
+        mit der Tastatur bedienen. Gedreht und gezoomt wird über die
+        Schaltflächen auf dem Globus, ausgewählt über die Länderliste darunter.
+      */}
+      <p className="globe-text-alt">
+        Interaktiver Globus: {WORLD_TERRITORY_COUNT} Länder und Gebiete lassen sich mit
+        dem Zeigegerät auswählen. Hervorgehoben sind die Länder, für die ein Atlas
+        vorliegt oder geplant ist. Mit den Schaltflächen auf dem Globus lässt er sich
+        drehen{mode === "svg" ? "" : " und zoomen"}. Dieselben Länder stehen als
+        bedienbare Liste im <a href="#laender">Abschnitt „Länder“</a>.
+      </p>
+
+      <div className="globe-instructions">
+        <i /> {instructions}
+      </div>
       <div className="globe-count"><strong>{WORLD_TERRITORY_COUNT}</strong><span>Gebiete<br />interaktiv</span></div>
     </div>
   );

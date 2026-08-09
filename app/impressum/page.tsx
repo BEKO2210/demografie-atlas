@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "../data/seo";
 import { LegalShell } from "../components/legal-shell";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Impressum — Demografie Atlas",
-  description: "Anbieterkennzeichnung des Demografie Atlas.",
-};
+  description:
+    "Anbieterkennzeichnung des Demografie Atlas nach § 5 DDG und § 18 MStV.",
+  path: "/impressum/",
+});
 
 export default function ImpressumPage() {
   return (

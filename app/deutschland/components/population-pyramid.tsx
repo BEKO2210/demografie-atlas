@@ -10,6 +10,8 @@ import {
   formatMillions,
   interpolatePopulation,
   LAST_YEAR,
+  MINUS,
+  NBSP,
   OFFICIAL_TOTAL_2025,
   type Population,
 } from "./projection-model";
@@ -22,19 +24,35 @@ const TOP = 28;
 const BOTTOM = 574;
 const ROW = (BOTTOM - TOP) / 91;
 const MAX_BAR = 405;
-const FIXED_MAX = 0.86;
 const AGES = Array.from({ length: 91 }, (_, age) => age);
 
-const barWidth = (value: number) => Math.max(1.5, (value / FIXED_MAX) * MAX_BAR);
 const barY = (age: number) => BOTTOM - age * ROW - ROW * 0.72;
 const BAR_HEIGHT = Math.max(3, ROW * 0.68);
 
 const sum = (population: Population) =>
   population.men.reduce((total, value, age) => total + value + population.women[age], 0);
 
+/**
+ * Größter Einzelwert über alle Jahrgänge und alle Projektionsjahre.
+ * Eine fest verdrahtete Obergrenze ließ die Balken ab 2043 aus dem Diagramm laufen —
+ * die Skala wird deshalb aus den Daten selbst abgeleitet, mit etwas Luft nach oben.
+ */
+function scaleFor(projection: Record<number, Population>) {
+  let max = 0;
+  for (const population of Object.values(projection)) {
+    for (const age of AGES) {
+      if (population.men[age] > max) max = population.men[age];
+      if (population.women[age] > max) max = population.women[age];
+    }
+  }
+  return Math.ceil(max * 1.02 * 20) / 20;
+}
+
 const formatDelta = (total: number) => {
   const delta = ((total / OFFICIAL_TOTAL_2025) - 1) * 100;
-  return `${delta <= 0 ? "" : "+"}${delta.toLocaleString("de-DE", { maximumFractionDigits: 1 })} %`;
+  const rounded = Math.round(delta * 10) / 10;
+  const sign = rounded === 0 ? "±" : rounded < 0 ? MINUS : "+";
+  return `${sign}${Math.abs(rounded).toLocaleString("de-DE", { maximumFractionDigits: 1 })}${NBSP}%`;
 };
 
 const ageLabel = (age: number) => (age === 90 ? "90+" : String(age));
@@ -45,14 +63,24 @@ const setText = (node: Element | null, text: string) => {
 
 type Hovered = { age: number; sex: "Männer" | "Frauen" } | null;
 
+/**
+ * Modellierte Größe: auf volle Tausend gerundet, damit sie nicht wie ein
+ * amtlich ausgezählter Einzelwert aussieht.
+ */
 const peopleLabel = (values: Population, active: NonNullable<Hovered>) => {
   const value = active.sex === "Männer" ? values.men[active.age] : values.women[active.age];
-  return Math.round(value * 1_000_000).toLocaleString("de-DE");
+  const thousands = Math.round(value * 1000) * 1000;
+  return `rund ${thousands.toLocaleString("de-DE")}`;
 };
 
 export function PopulationPyramid() {
   const projection = useMemo(() => buildProjection(), []);
   const initial = projection[FIRST_YEAR];
+  const scaleMax = useMemo(() => scaleFor(projection), [projection]);
+  const barWidth = useCallback(
+    (value: number) => Math.max(1.5, (value / scaleMax) * MAX_BAR),
+    [scaleMax],
+  );
   const reducedMotion = usePrefersReducedMotion();
 
   const [playing, setPlaying] = useState(false);
@@ -71,6 +99,7 @@ export function PopulationPyramid() {
   const previousTime = useRef<number | null>(null);
   const population = useRef<Population>(initial);
   const hoveredRef = useRef<Hovered>(null);
+  const announcedYear = useRef<number>(FIRST_YEAR);
 
   const menBars = useRef<(SVGRectElement | null)[]>([]);
   const womenBars = useRef<(SVGRectElement | null)[]>([]);
@@ -99,19 +128,24 @@ export function PopulationPyramid() {
       if (women) women.setAttribute("width", String(barWidth(next.women[age])));
     }
 
+    // Die Ableselage ist eine Live-Region: sie darf nur bei echtem Jahreswechsel
+    // neu geschrieben werden, sonst meldet der Screenreader jeden Frame.
     const rounded = Math.round(year);
-    const total = sum(next);
-    setText(yearRef.current, String(rounded));
-    setText(totalRef.current, formatMillions(total));
-    setText(deltaRef.current, formatDelta(total));
-    svgRef.current?.setAttribute("aria-label", `Bevölkerungspyramide Deutschland im Jahr ${rounded}`);
+    if (rounded !== announcedYear.current) {
+      announcedYear.current = rounded;
+      const total = sum(interpolatePopulation(projection, rounded));
+      setText(yearRef.current, String(rounded));
+      setText(totalRef.current, formatMillions(total));
+      setText(deltaRef.current, formatDelta(total));
+      svgRef.current?.setAttribute("aria-label", `Bevölkerungspyramide Deutschland im Jahr ${rounded}`);
+    }
 
     const active = hoveredRef.current;
     if (active) {
       setText(tooltipValueRef.current, peopleLabel(next, active));
-      setText(tooltipYearRef.current, `Menschen · ${rounded}`);
+      setText(tooltipYearRef.current, `Menschen · modelliert · ${rounded}`);
     }
-  }, [projection]);
+  }, [barWidth, projection]);
 
   // Die Schleife greift immer auf die neueste Fassung zu, ohne sich selbst zu referenzieren.
   const tickRef = useRef<(time: number) => void>(() => {});
@@ -194,7 +228,7 @@ export function PopulationPyramid() {
     const active = hoveredRef.current;
     if (!active) return;
     setText(tooltipValueRef.current, peopleLabel(population.current, active));
-    setText(tooltipYearRef.current, `Menschen · ${Math.round(displayYear.current)}`);
+    setText(tooltipYearRef.current, `Menschen · modelliert · ${Math.round(displayYear.current)}`);
   }, [hovered]);
 
   const togglePlayback = () => {
@@ -246,11 +280,11 @@ export function PopulationPyramid() {
   return (
     <div className="pyramid-shell">
       <div className="pyramid-header">
-        <div className="legend" aria-label="Legende">
+        <div className="legend" role="group" aria-label="Legende">
           <span><i className="legend-dot male" /> Männer</span>
           <span><i className="legend-dot female" /> Frauen</span>
         </div>
-        <div className="chart-readout">
+        <div className="chart-readout" role="status" aria-live="polite" aria-atomic="true">
           <span className="chart-year" ref={yearRef}>{FIRST_YEAR}</span>
           <span className="chart-total"><span ref={totalRef}>{formatMillions(sum(initial))}</span><em ref={deltaRef}>{formatDelta(sum(initial))}</em></span>
         </div>
@@ -354,10 +388,20 @@ export function PopulationPyramid() {
           />
           <div className="timeline-labels"><span>2025</span><span>2040</span><span>2055</span><span>2070</span></div>
         </div>
-        <button className="speed-button" onClick={onSpeed} aria-label="Animationsgeschwindigkeit ändern">
+        <button
+          className="speed-button"
+          onClick={onSpeed}
+          aria-label={`${speed.toLocaleString("de-DE")}× Geschwindigkeit — Tempo ändern`}
+        >
           {speed.toLocaleString("de-DE")}×
         </button>
       </div>
+
+      <p className="pyramid-note">
+        <b>Amtlich:</b> Bevölkerungsstand und Geschlechterverteilung Ende 2025 sowie die
+        Zielgröße 74,7{NBSP}Mio. für 2070. <b>Modelliert:</b> die Einzeljahrgänge, alle
+        Zwischenjahre und jeder Wert im Tooltip — gerundet und ohne amtlichen Charakter.
+      </p>
     </div>
   );
 }

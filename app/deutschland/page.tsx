@@ -1,5 +1,5 @@
 import { AtlasArt } from "../components/atlas-art";
-import { AtlasFooter } from "../components/atlas-footer";
+import { CountryFlag } from "../components/country-flag";
 import { Icon } from "../components/ui-icon";
 import { Noise } from "../components/noise";
 import { RevealObserver } from "../components/reveal-observer";
@@ -8,25 +8,26 @@ import { FertilitySimulator } from "./components/fertility-simulator";
 import { PopulationPyramid } from "./components/population-pyramid";
 import { ProjectionChart } from "./components/projection-chart";
 import { ScrollProgress } from "./components/scroll-progress";
+import { MobileNav } from "../components/mobile-nav";
 
 const metricCards = [
-  { label: "Bevölkerung · 31.12.2025", value: "83,47 Mio.", note: "83.467.117 Menschen", tone: "gold" },
-  { label: "Männer", value: "41,18 Mio.", note: "49,3 % der Bevölkerung", tone: "blue" },
-  { label: "Frauen", value: "42,28 Mio.", note: "50,7 % der Bevölkerung", tone: "rose" },
+  { label: "Bevölkerung · 31.12.2025", value: "83,47 Mio.", note: "83.467.117 Menschen", tone: "gold" },
+  { label: "Männer", value: "41,18 Mio.", note: "49,3 % der Bevölkerung", tone: "blue" },
+  { label: "Frauen", value: "42,28 Mio.", note: "50,7 % der Bevölkerung", tone: "rose" },
   { label: "Geburtenziffer · 2025", value: "1,32", note: "Kinder je Frau", tone: "green" },
 ];
 
 function BrandFlag() {
   return (
     <span className="brand-mark">
-      <span className="brand-flag" role="img" aria-label="Flagge Deutschland">🇩🇪</span>
+      <span className="brand-flag"><CountryFlag code="DE" name="Deutschland" round /></span>
     </span>
   );
 }
 
 export default function Home() {
   return (
-    <main id="top">
+    <main id="inhalt">
       <Noise />
       <div className="orb orb-one" aria-hidden="true" />
       <div className="orb orb-two" aria-hidden="true" />
@@ -46,16 +47,26 @@ export default function Home() {
             <a href="#methodik">Methodik</a>
           </div>
           <span className="data-status"><i /> Datenstand 2025/26</span>
+          <MobileNav
+            links={[
+              { href: "#pyramide", label: "Pyramide" },
+              { href: "#entwicklung", label: "Entwicklung" },
+              { href: "#kinderzahl", label: "Kinderzahl" },
+              { href: "#kraefte", label: "Drei Kräfte" },
+              { href: "#methodik", label: "Methodik" },
+              { href: sitePath(), label: "Zur Länderübersicht" },
+            ]}
+          />
         </div>
       </nav>
 
       <header className="hero wrap">
         <div className="hero-grid">
           <div className="hero-copy">
-            <div className="eyebrow"><span>Interaktive Datenstory</span><b>2025 → 2070</b></div>
+            <div className="eyebrow"><span>Interaktive Datenstory</span><b>2025–2070</b></div>
             <h1>Deutschland<br /><em>wird älter.</em><br />Nicht kleiner gedacht.</h1>
             <p className="hero-lead">
-              Beobachte, wie 83 Millionen Menschen durch die Zeit wandern — und wie Geburten,
+              Beobachte, wie 83 Millionen Menschen durch die Zeit wandern — und wie Geburten,
               längeres Leben und Zuwanderung die Form eines Landes verändern.
             </p>
             <div className="hero-actions">
@@ -117,9 +128,11 @@ export default function Home() {
             <AtlasArt atlas="development" quadrant={0} className="future-art" />
             <div className="future-overlay">
               <span className="data-chip">Variante 2 · G2L2W2</span>
-              <div className="future-number">74,7</div>
-              <h3>Millionen Menschen im Jahr 2070</h3>
-              <p>Die moderate Destatis-Variante liegt rund 8,8 Millionen unter dem Bevölkerungsstand von Ende 2025.</p>
+              <h3>
+                <span className="future-number">74,7</span>
+                <span>Millionen Menschen im Jahr 2070</span>
+              </h3>
+              <p>Die moderate Destatis-Variante liegt rund 8,8 Millionen unter dem Bevölkerungsstand von Ende 2025.</p>
             </div>
           </article>
 
@@ -166,7 +179,7 @@ export default function Home() {
             <h2>Was heißt<br />eigentlich 2,1?</h2>
           </div>
           <p>
-            Ohne Wanderung gilt eine Geburtenziffer von etwa 2,1 Kindern je Frau als
+            Ohne Wanderung gilt eine Geburtenziffer von etwa 2,1 Kindern je Frau als
             bestandserhaltendes Niveau. Deutschland lag 2025 bei 1,32.
           </p>
         </div>
@@ -176,8 +189,10 @@ export default function Home() {
             <AtlasArt atlas="generations" quadrant={0} className="replacement-art" />
             <div className="replacement-copy">
               <span className="data-chip">Bestandserhaltender Richtwert</span>
-              <strong>2,1</strong>
-              <h3>Kinder je Frau</h3>
+              <h3>
+                <span className="replacement-number">2,1</span>
+                <span>Kinder je Frau</span>
+              </h3>
               <p>
                 Zwei Kinder ersetzen rechnerisch die Eltern. Das zusätzliche Zehntel gleicht unter anderem
                 Geschlechterverhältnis und frühe Sterblichkeit aus. Es ist ein langfristiger Richtwert, kein politisches Soll.
@@ -208,7 +223,7 @@ export default function Home() {
       <section className="section wrap" id="kraefte">
         <div className="section-heading compact-heading reveal">
           <div>
-            <span className="section-kicker">Drei Kräfte</span>
+            <span className="section-kicker">04 / Drei Kräfte</span>
             <h2>Die Form<br />hinter der Zahl.</h2>
           </div>
           <p>Eine Gesamtzahl allein erklärt wenig. Erst die Bewegung der Altersgruppen macht den demografischen Wandel sichtbar.</p>
@@ -240,7 +255,7 @@ export default function Home() {
         <article className="method-card data-card reveal">
           <AtlasArt atlas="story-method" quadrant={3} className="method-art" />
           <div className="method-title">
-            <span className="section-kicker">04 / Methodik</span>
+            <span className="section-kicker">05 / Methodik</span>
             <h2>Exakt.<br />Und ehrlich modelliert.</h2>
           </div>
           <div className="method-copy">
@@ -250,7 +265,16 @@ export default function Home() {
             </div>
             <div>
               <span>Visualisierungsmodell</span>
-              <p>Die Einzelaltersform ist realistisch kalibriert, auf die amtlichen Summen normiert und altert mit geschlechtsabhängigen Überlebensraten. Die Projektion folgt der moderaten Zielgröße von 74,7 Millionen.</p>
+              <p>Die Einzelaltersform ist realistisch kalibriert, auf die amtlichen Summen normiert und altert mit geschlechtsabhängigen Überlebensraten. Die Projektion folgt der moderaten Zielgröße von 74,7 Millionen.</p>
+            </div>
+            <div>
+              <span>Was G2L2W2 bedeutet</span>
+              <p>
+                Die Kurzform benennt die drei Annahmen der Vorausberechnung: G2 steht für die
+                mittlere Annahme zur Geburtenhäufigkeit, L2 für die mittlere Annahme zur
+                Lebenserwartung, W2 für die mittlere Annahme zum Wanderungssaldo. Zusammen
+                ergeben sie Variante 2 von insgesamt 27 gerechneten Varianten.
+              </p>
             </div>
             <div>
               <span>Wichtig</span>
@@ -260,6 +284,7 @@ export default function Home() {
         </article>
       </section>
 
+      {/* Eine Fußzeile — vorher standen zwei mit derselben Wortmarke untereinander. */}
       <footer className="footer">
         <div className="wrap footer-inner">
           <div>
@@ -272,10 +297,16 @@ export default function Home() {
             <a href="https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Geburten/_inhalt.html" target="_blank" rel="noreferrer">Geburten 2025 ↗</a>
             <a href="https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Bevoelkerungsvorausberechnung/annahmen_ergebnisse_16te_kBv.html" target="_blank" rel="noreferrer">16. Vorausberechnung ↗</a>
           </div>
-          <a className="back-top" href="#top" aria-label="Zurück nach oben">↑</a>
+          <div className="source-links">
+            <span>Atlas</span>
+            <a href={sitePath()}>Länderübersicht</a>
+            <a href={sitePath("/impressum")}>Impressum</a>
+            <a href={sitePath("/datenschutz")}>Datenschutz</a>
+            <small>© {new Date().getFullYear()}</small>
+          </div>
+          <a className="back-top" href="#inhalt" aria-label="Zurück nach oben">↑</a>
         </div>
       </footer>
-      <AtlasFooter compact countryCode="DE" />
     </main>
   );
 }

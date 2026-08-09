@@ -1,8 +1,8 @@
 // Automatisch erzeugt von scripts/build-world-data.mjs — nicht von Hand ändern.
 import type { WorldCountryMeta } from "./world-types";
 
-/** Anzahl der Gebiete in public/data/world.json. */
-export const WORLD_TERRITORY_COUNT = 241;
+/** Anzahl der auswählbaren Gebiete in public/data/world.json (mit Metadaten). */
+export const WORLD_TERRITORY_COUNT = 236;
 
 /** Startauswahl des Globus; wird gebraucht, bevor die Weltdaten geladen sind. */
 export const DEFAULT_COUNTRY: WorldCountryMeta = {
@@ -11,7 +11,7 @@ export const DEFAULT_COUNTRY: WorldCountryMeta = {
   "name": "Deutschland",
   "flag": "🇩🇪",
   "capital": "Berlin",
-  "region": "Europe",
+  "region": "Europa",
   "latlng": [
     51,
     9

@@ -14,7 +14,7 @@
     "validate:artifact": "bash scripts/validate-artifact.sh",
     "lint": "bash scripts/sites-env.sh -- eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "bash scripts/sites-env.sh -- drizzle-kit generate",
-    "build:assets": "node scripts/build-world-data.mjs && node scripts/build-globe-texture.mjs && node scripts/build-noise.mjs && node scripts/build-avif.mjs"
+    "build:assets": "node scripts/build-world-data.mjs && node scripts/build-flags.mjs && node scripts/build-globe-texture.mjs && GLOBE_TEXTURE_WIDTH=4096 node scripts/build-globe-texture.mjs && node scripts/build-noise.mjs && node scripts/build-avif.mjs"
   },
   "dependencies": {
     "d3-geo": "^3.1.1",
@@ -43,6 +43,7 @@
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.6",
+    "flag-icons": "^7.5.0",
     "react-server-dom-webpack": "19.2.6",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",

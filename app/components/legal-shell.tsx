@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { AtlasFooter } from "./atlas-footer";
-import { sitePath } from "../data/site";
+import { LEGAL_UPDATED, sitePath } from "../data/site";
 import { AtlasMark } from "./atlas-mark";
 import { Noise } from "./noise";
 
@@ -16,7 +16,7 @@ export function LegalShell({
   children: ReactNode;
 }) {
   return (
-    <main className="legal-page">
+    <main className="legal-page" id="inhalt">
       <Noise />
       <nav className="atlas-nav legal-nav">
         <div className="wrap atlas-nav-inner">
@@ -39,7 +39,7 @@ export function LegalShell({
           <span>Rechtliches</span>
           <a href={sitePath("/impressum")}>Impressum</a>
           <a href={sitePath("/datenschutz")}>Datenschutz</a>
-          <small>Stand: 9. August 2026</small>
+          <small>Stand: {LEGAL_UPDATED}</small>
         </aside>
         <article className="legal-document">{children}</article>
       </div>

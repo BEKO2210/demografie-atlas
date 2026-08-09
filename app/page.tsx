@@ -1,12 +1,16 @@
 import type { CSSProperties } from "react";
 import { AtlasFooter } from "./components/atlas-footer";
 import { Noise } from "./components/noise";
+import { FlagTicker } from "./components/flag-ticker";
 import { InteractiveWorld } from "./components/interactive-world";
+import { WorldSelectionProvider } from "./components/world/selection-context";
 import { PointerSpotlight } from "./components/pointer-spotlight";
 import { RevealObserver } from "./components/reveal-observer";
 import { countries, type Country } from "./data/countries";
 import { sitePath } from "./data/site";
 import { AtlasMark } from "./components/atlas-mark";
+import { CountryFlag } from "./components/country-flag";
+import { MobileNav } from "./components/mobile-nav";
 
 function ArrowIcon() {
   return (
@@ -27,7 +31,7 @@ function CountryCard({ country, index }: { country: Country; index: number }) {
     <>
       <div className="country-card-glow" />
       <div className="country-card-top">
-        <span className="country-flag" role="img" aria-label={`Flagge ${country.name}`}>{country.flag}</span>
+        <span className="country-flag"><CountryFlag code={country.code} name={country.name} /></span>
         <span className={`country-status status-${country.status}`}>
           <i /> {country.status === "live" ? "Live" : country.status === "next" ? "Als Nächstes" : "Geplant"}
         </span>
@@ -49,20 +53,21 @@ function CountryCard({ country, index }: { country: Country; index: number }) {
     </>
   );
 
-  return country.status === "live" ? (
-    <a className="country-card country-card-live reveal" href={sitePath(`/${country.slug}`)} style={style}>
+  // Auch die noch nicht veröffentlichten Länder haben inzwischen eine Seite.
+  return (
+    <a
+      className={`country-card reveal ${country.status === "live" ? "country-card-live" : "country-card-planned"}`}
+      href={sitePath(`/${country.slug}`)}
+      style={style}
+    >
       {content}
     </a>
-  ) : (
-    <article className="country-card country-card-planned reveal" style={style} aria-label={`${country.name}, ${country.horizon}`}>
-      {content}
-    </article>
   );
 }
 
 export default function AtlasHome() {
   return (
-    <main className="atlas-home">
+    <main className="atlas-home" id="inhalt">
       <Noise />
       <PointerSpotlight />
       <RevealObserver />
@@ -79,31 +84,36 @@ export default function AtlasHome() {
             <a href={sitePath("/datenschutz")}>Datenschutz</a>
           </div>
           <span className="atlas-live-chip"><i /> 1 Atlas live</span>
+          <MobileNav
+            links={[
+              { href: "#laender", label: "Länder" },
+              { href: "#system", label: "System" },
+              { href: sitePath("/datenschutz"), label: "Datenschutz" },
+              { href: sitePath("/impressum"), label: "Impressum" },
+            ]}
+          />
         </div>
       </nav>
 
-      <header className="atlas-hero wrap">
-        <div className="atlas-hero-copy">
-          <div className="atlas-eyebrow"><span>Global Demography Interface</span><b>195 / ONE PLANET</b></div>
-          <h1>Eine Welt.<br />Viele <em>Zukünfte.</em></h1>
-          <p>
-            Drehe die Erde, wähle ein Land und sieh, wie Generationen seine Zukunft formen.
-            Ein interaktives System für Bevölkerung, Alterung, Geburten und Migration.
-          </p>
-          <div className="atlas-hero-actions">
-            <a className="primary-action" href="#laender">Länder entdecken <ArrowIcon /></a>
-            <a className="ghost-action" href={sitePath("/deutschland")}><span>🇩🇪</span> Deutschland öffnen</a>
+      <WorldSelectionProvider>
+        <header className="atlas-hero wrap">
+          <div className="atlas-hero-copy">
+            <div className="atlas-eyebrow"><span>Weltweite Demografie</span><b>236 Gebiete</b></div>
+            <h1>Die Welt von morgen.<br /><em>Land für Land.</em></h1>
+            <p>
+              Drehe den Globus und entdecke, wie Bevölkerung, Alterung, Geburten und
+              Migration jedes Land verändern.
+            </p>
+            <div className="atlas-hero-actions">
+              <a className="primary-action" href="#laender">Alle Länder entdecken <ArrowIcon /></a>
+            </div>
           </div>
-        </div>
 
-        <InteractiveWorld />
+          <InteractiveWorld />
 
-        <div className="atlas-ticker" aria-label="Geplante Länder">
-          <span>ROTATE / SELECT / EXPLORE</span>
-          {countries.map((country) => <b key={country.code}>{country.flag} {country.code}</b>)}
-          <span>GLOBAL ATLAS · 2025 — 2070</span>
-        </div>
-      </header>
+          <FlagTicker />
+        </header>
+      </WorldSelectionProvider>
 
       <section className="atlas-section wrap" id="laender">
         <div className="atlas-section-head reveal">
@@ -130,9 +140,21 @@ export default function AtlasHome() {
               <span>02 / Ein System, viele Länder</span>
               <h2>Skalierbar<br />von Anfang an.</h2>
               <p>
-                Neue Länder werden über eine zentrale Registry ergänzt. Flagge, Status,
+                Neue Länder werden über ein zentrales Länderverzeichnis ergänzt. Flagge, Status,
                 Navigation und Kartenlayout entstehen automatisch — ohne die bestehende
                 Deutschland-Datenstory anzufassen.
+              </p>
+              <p>
+                Ein Land kommt in den Atlas, sobald für dieses Land eine amtliche
+                Bevölkerungsstatistik und eine offizielle Vorausberechnung vorliegen, die
+                sich nach Einzeljahrgang und Geschlecht auswerten lassen. Geprüft werden
+                Herausgeber, Stichtag, Gebietsstand und die Frage, welche Annahmen hinter
+                der Vorausberechnung stehen.
+              </p>
+              <p>
+                Erst danach wird das Kohortenmodell auf die amtlichen Summen des Landes
+                kalibriert. Jede Kennzahl auf einer Länderseite trägt ihre Quelle, und
+                modellierte Werte sind als solche gekennzeichnet.
               </p>
             </div>
             <div className="system-steps">

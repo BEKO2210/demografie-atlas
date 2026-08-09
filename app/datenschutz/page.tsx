@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "../data/seo";
+import { LEGAL_UPDATED } from "../data/site";
 import { LegalShell } from "../components/legal-shell";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Datenschutz — Demografie Atlas",
-  description: "Datenschutzhinweise für den Demografie Atlas.",
-};
+  description:
+    "Datenschutzhinweise für den Demografie Atlas: keine Cookies, kein Tracking, keine Analyse.",
+  path: "/datenschutz/",
+});
 
 export default function DatenschutzPage() {
   return (
@@ -80,7 +84,7 @@ export default function DatenschutzPage() {
       <section>
         <h2>7. Aktualität</h2>
         <p>
-          Diese Hinweise entsprechen dem technischen Stand vom 9. August 2026. Werden später
+          Diese Hinweise entsprechen dem technischen Stand vom {LEGAL_UPDATED}. Werden später
           Formulare, Analysen, Newsletter oder weitere Dienste ergänzt, wird die Erklärung vor
           deren Aktivierung angepasst.
         </p>

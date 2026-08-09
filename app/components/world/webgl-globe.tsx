@@ -1,33 +1,35 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MeshPhongMaterial, TextureLoader, SRGBColorSpace } from "three";
+import {
+  LinearFilter,
+  LinearMipmapLinearFilter,
+  MeshPhongMaterial,
+  SRGBColorSpace,
+  TextureLoader,
+  TOUCH,
+} from "three";
 import Globe, { type GlobeMethods } from "react-globe.gl";
 import { countries } from "../../data/countries";
 import { sitePath } from "../../data/site";
-import { DEFAULT_COUNTRY } from "../../data/world-constants";
 import type { CountryFeature } from "../../data/world-types";
+import { CountryFlag } from "../country-flag";
 import { CountryIndex } from "./hit-test";
 import { displayName, featureId, type WorldRendererProps } from "./shared";
 
-type GlobePoint = {
-  lat: number;
-  lng: number;
-  code: string;
-  name: string;
-  flag: string;
-  status: "live" | "next" | "planned";
-};
 
-type Tip = { x: number; y: number; flag: string; name: string; note: string };
+type Tip = { x: number; y: number; code: string; name: string; note: string };
 
 const atlasCountryByCode = new Map(countries.map((country) => [country.code, country]));
 
-/** Oversampling begrenzen: auf schmalen Geräten kostet jedes zusätzliche Pixel spürbar GPU-Zeit. */
+/**
+ * Auflösung des Renderers. Seit die Länder als Textur statt als tausende Meshes
+ * gezeichnet werden, kostet ein zusätzliches Pixel kaum noch etwas — die frühere
+ * Deckelung auf 1,25 ließ den Globus auf Telefonen mit dreifacher Pixeldichte
+ * sichtbar weich wirken. 2,0 ist scharf und bleibt bezahlbar.
+ */
 function targetPixelRatio() {
-  const dpr = window.devicePixelRatio || 1;
-  const isCompact = window.matchMedia("(max-width: 760px)").matches;
-  return Math.min(dpr, isCompact ? 1.25 : 1.5);
+  return Math.min(window.devicePixelRatio || 1, 2);
 }
 
 export default function WebGlGlobe({
@@ -70,42 +72,34 @@ export default function WebGlGlobe({
       transparent: true,
       opacity: 0.97,
     });
-    new TextureLoader().load(sitePath("/assets/globe-texture.png"), (texture) => {
-      texture.colorSpace = SRGBColorSpace;
-      material.emissiveMap = texture;
-      material.needsUpdate = true;
-    });
     return material;
   }, []);
+
+  /**
+   * Textur passend zur GPU laden: 8192 px, wo es geht, sonst 4096 px.
+   * Anisotrope Filterung hält die Kanten auch dort scharf, wo die Kugel
+   * flach zum Betrachter steht — ohne sie franst der Rand sichtbar aus.
+   */
+  const loadTexture = useCallback((renderer: { capabilities: { maxTextureSize: number; getMaxAnisotropy: () => number } }) => {
+    const use8k = renderer.capabilities.maxTextureSize >= 8192;
+    const file = use8k ? "/assets/globe-texture-8k.png" : "/assets/globe-texture.png";
+    new TextureLoader().load(sitePath(file), (texture) => {
+      texture.colorSpace = SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      texture.minFilter = LinearMipmapLinearFilter;
+      texture.magFilter = LinearFilter;
+      texture.generateMipmaps = true;
+      texture.needsUpdate = true;
+      globeMaterial.emissiveMap = texture;
+      globeMaterial.needsUpdate = true;
+    });
+  }, [globeMaterial]);
 
   /** Nur Auswahl und Zeigerposition bekommen echte Geometrie. */
   const highlighted = useMemo(() => {
     const ids = new Set([selectedId, hoveredId].filter(Boolean) as string[]);
     return world.features.filter((item) => ids.has(featureId(item)));
   }, [world, selectedId, hoveredId]);
-
-  const atlasPoints = useMemo<GlobePoint[]>(() => countries.flatMap((atlasCountry) => {
-    const match = [...world.metaById.values()].find((entry) => entry.cca2 === atlasCountry.code);
-    if (!match) return [];
-    return [{
-      lat: match.latlng[0],
-      lng: match.latlng[1],
-      code: match.cca2,
-      name: atlasCountry.name,
-      flag: atlasCountry.flag,
-      status: atlasCountry.status,
-    }];
-  }), [world]);
-
-  const atlasArcs = useMemo(() => atlasPoints
-    .filter((point) => point.code !== "DE")
-    .map((point, index_) => ({
-      startLat: DEFAULT_COUNTRY.latlng[0],
-      startLng: DEFAULT_COUNTRY.latlng[1],
-      endLat: point.lat,
-      endLng: point.lng,
-      color: index_ % 2 ? ["rgba(118,235,255,.8)", "rgba(154,120,255,.22)"] : ["rgba(154,120,255,.7)", "rgba(118,235,255,.2)"],
-    })), [atlasPoints]);
 
   /**
    * Zentrale Steuerung der Renderschleife. Ohne sie läuft der WebGL-Renderer auch
@@ -157,7 +151,7 @@ export default function WebGlGlobe({
     setTip({
       x: at.x - rect.left,
       y: at.y - rect.top,
-      flag: meta?.flag ?? "◌",
+      code: meta?.cca2 ?? "",
       name: displayName(meta),
       note: meta && atlasCountryByCode.has(meta.cca2) ? "Atlas vorgemerkt" : "Land auswählen",
     });
@@ -248,11 +242,44 @@ export default function WebGlGlobe({
       controls.dampingFactor = 0.08;
       controls.minDistance = 145;
       controls.maxDistance = 420;
-      globe.renderer().setPixelRatio(targetPixelRatio());
+
+      /**
+       * Kein Zoom über Rad oder Kneifen: das Rad wurde sonst abgefangen und die
+       * Seite ließ sich über dem Globus nicht mehr scrollen. Gezoomt wird über
+       * die Schaltflächen. Ein Finger gehört der Seite (touch-action: pan-y),
+       * gedreht wird mit zwei Fingern oder mit der Maus.
+       */
+      controls.enableZoom = false;
+      controls.enablePan = false;
+      controls.touches = { ONE: TOUCH.PAN, TWO: TOUCH.DOLLY_ROTATE };
+
+      const renderer = globe.renderer();
+      renderer.setPixelRatio(targetPixelRatio());
+      renderer.domElement.style.touchAction = "pan-y";
+      loadTexture(renderer);
     }
     syncAnimation();
     onReady();
-  }, [onReady, reducedMotion, syncAnimation]);
+  }, [loadTexture, onReady, reducedMotion, syncAnimation]);
+
+  /**
+   * Gleichwertige Bedienung ohne Zeigegerät: Drehen und Zoomen über echte
+   * Schaltflächen. Das Canvas selbst ist für Screenreader nicht bedienbar —
+   * die Textfassung daneben beschreibt, was es zeigt.
+   */
+  const moveCamera = useCallback((deltaLng: number, deltaLat: number, zoomFactor: number) => {
+    const globe = globeRef.current;
+    if (!globe) return;
+    const controls = globe.controls();
+    if (controls) controls.autoRotate = false;
+    const view = globe.pointOfView();
+    globe.pointOfView({
+      lat: Math.max(-80, Math.min(80, view.lat + deltaLat)),
+      lng: view.lng + deltaLng,
+      altitude: Math.max(0.6, Math.min(3.2, view.altitude * zoomFactor)),
+    }, 420);
+    noteInteraction();
+  }, [noteInteraction]);
 
   // Kameraflug, sobald ein Land gewählt wurde. Ohne Auswahl bleibt die Startpose.
   useEffect(() => {
@@ -267,6 +294,7 @@ export default function WebGlGlobe({
 
   return (
     <div ref={hostRef} className="globe-host">
+      <div className="globe-scene" aria-hidden="true">
       <Globe
         ref={globeRef}
         width={size}
@@ -285,28 +313,19 @@ export default function WebGlGlobe({
         polygonSideColor={() => "rgba(31, 45, 75, .34)"}
         polygonStrokeColor={() => "rgba(150, 187, 255, .18)"}
         polygonsTransitionDuration={240}
-        pointsData={atlasPoints}
-        pointLat="lat"
-        pointLng="lng"
-        pointRadius={(item) => (item as GlobePoint).status === "live" ? 0.52 : 0.34}
-        pointAltitude={(item) => (item as GlobePoint).status === "live" ? 0.12 : 0.065}
-        pointColor={(item) => (item as GlobePoint).status === "live" ? "#63ffc2" : "#8d7cff"}
-        arcsData={atlasArcs}
-        arcStartLat="startLat"
-        arcStartLng="startLng"
-        arcEndLat="endLat"
-        arcEndLng="endLng"
-        arcColor="color"
-        arcAltitudeAutoScale={0.26}
-        arcStroke={0.32}
-        arcDashLength={0.32}
-        arcDashGap={0.82}
-        arcDashAnimateTime={5200}
         onGlobeReady={handleReady}
       />
+      </div>
+      <div className="fallback-controls globe-controls" role="group" aria-label="Globus drehen und zoomen">
+        <button type="button" aria-label="Welt nach Westen drehen" onClick={() => moveCamera(-35, 0, 1)}>←</button>
+        <button type="button" aria-label="Welt nach Osten drehen" onClick={() => moveCamera(35, 0, 1)}>→</button>
+        <span>3D / GLOBUS</span>
+        <button type="button" aria-label="Herauszoomen" onClick={() => moveCamera(0, 0, 1.25)}>−</button>
+        <button type="button" aria-label="Hineinzoomen" onClick={() => moveCamera(0, 0, 0.8)}>+</button>
+      </div>
       {tip && (
         <div className="globe-tip globe-tip-floating" style={{ left: tip.x, top: tip.y }}>
-          <span>{tip.flag}</span>
+          <span>{tip.code ? <CountryFlag code={tip.code} /> : "◌"}</span>
           <strong>{tip.name}</strong>
           <small>{tip.note}</small>
         </div>

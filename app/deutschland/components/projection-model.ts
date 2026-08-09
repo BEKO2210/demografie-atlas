@@ -5,6 +5,8 @@ export const LAST_YEAR = 2070;
 export const OFFICIAL_MEN_2025 = 41.184322;
 export const OFFICIAL_WOMEN_2025 = 42.282795;
 export const OFFICIAL_TOTAL_2025 = 83.467117;
+/** Amtlich: 654.241 Lebendgeborene im Jahr 2025. */
+export const OFFICIAL_BIRTHS_2025 = 0.654241;
 const TARGET_2070 = 74.7;
 
 const COHORT_SHAPE = [
@@ -26,6 +28,17 @@ function maleShare(age: number) {
   return share;
 }
 
+/**
+ * Basisverteilung für 2025.
+ *
+ * Der jüngste Jahrgang wird auf die amtlich gemeldeten 654.241 Lebendgeborenen
+ * gesetzt, nicht auf den Wert, den die Normierung der Formkurve zufällig ergibt.
+ * Das hat zwei Gründe: die Zahl steht als amtlicher Wert auf derselben Seite,
+ * und die Projektion schreibt ab 2025 mit genau diesem Wert fort — stimmen beide
+ * nicht überein, entsteht am Übergang ein sichtbarer Sprung im Diagramm.
+ * Die Differenz wird auf die übrigen Jahrgänge verteilt, damit die amtlichen
+ * Summen je Geschlecht exakt erhalten bleiben.
+ */
 function makeBase(): Population {
   const men: number[] = [];
   const women: number[] = [];
@@ -38,9 +51,22 @@ function makeBase(): Population {
     sumMen += total * share;
     sumWomen += total * (1 - share);
   });
-  return {
+
+  const scaled = {
     men: men.map((value) => (value * OFFICIAL_MEN_2025) / sumMen),
     women: women.map((value) => (value * OFFICIAL_WOMEN_2025) / sumWomen),
+  };
+
+  const shareAtBirth = maleShare(0);
+  const anchor = (values: number[], total: number, newborns: number) => {
+    const rest = total - newborns;
+    const restBefore = total - values[0];
+    return values.map((value, age) => (age === 0 ? newborns : (value * rest) / restBefore));
+  };
+
+  return {
+    men: anchor(scaled.men, OFFICIAL_MEN_2025, OFFICIAL_BIRTHS_2025 * shareAtBirth),
+    women: anchor(scaled.women, OFFICIAL_WOMEN_2025, OFFICIAL_BIRTHS_2025 * (1 - shareAtBirth)),
   };
 }
 
@@ -59,8 +85,24 @@ function targetTotal(year: number) {
   return OFFICIAL_TOTAL_2025 + (TARGET_2070 - OFFICIAL_TOTAL_2025) * smooth;
 }
 
+/**
+ * Geburtenzahl der Projektionsjahre.
+ *
+ * Sie bleibt auf dem amtlichen Wert von 2025. Das ist bewusst eine schlichte
+ * Annahme und keine Prognose: eine eigene Geburtenkurve zu erfinden hieße, eine
+ * Zahl zu behaupten, für die es hier keine geprüfte Grundlage gibt. Weil der
+ * jüngste Jahrgang der Basisverteilung auf denselben Wert gesetzt ist, geht die
+ * Kurve am Übergang stetig ineinander über — der frühere Knick am Jahrgang 2025
+ * entstand allein aus der Abweichung zwischen beiden Werten.
+ */
+function birthsPerYear() {
+  return OFFICIAL_BIRTHS_2025;
+}
+
 export function buildProjection() {
-  const years: Record<number, Population> = { [FIRST_YEAR]: makeBase() };
+  const base = makeBase();
+
+  const years: Record<number, Population> = { [FIRST_YEAR]: base };
   for (let year = FIRST_YEAR + 1; year <= LAST_YEAR; year += 1) {
     const prev = years[year - 1];
     const men = Array(91).fill(0) as number[];
@@ -73,9 +115,9 @@ export function buildProjection() {
     men[90] = prev.men[89] * survival(89, "m") + prev.men[90] * survival(90, "m");
     women[90] = prev.women[89] * survival(89, "f") + prev.women[90] * survival(90, "f");
 
-    const births = 0.654241 * (1 + 0.05 * ((year - FIRST_YEAR) / 45));
-    men[0] = births * 0.512;
-    women[0] = births * 0.488;
+    const newborns = birthsPerYear();
+    men[0] = newborns * 0.512;
+    women[0] = newborns * 0.488;
 
     const raw = [...men, ...women].reduce((sum, value) => sum + value, 0);
     const residual = targetTotal(year) - raw;
@@ -115,9 +157,19 @@ export function interpolatePopulation(years: Record<number, Population>, year: n
   };
 }
 
-export function formatMillions(value: number, digits = 1) {
+/** Geschütztes Leerzeichen zwischen Zahl und Einheit — Zahl und Maß gehören zusammen. */
+export const NBSP = " ";
+
+/** Typografisches Minus (U+2212); im ganzen Projekt einheitlich. */
+export const MINUS = "−";
+
+/**
+ * Millionenangabe in einer einzigen Rundung. Vorher stand dieselbe Zahl als
+ * „83,47 Mio." auf der Kachel und als „83,5 Mio." über der Pyramide.
+ */
+export function formatMillions(value: number) {
   return `${value.toLocaleString("de-DE", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  })} Mio.`;
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 2,
+  })}${NBSP}Mio.`;
 }

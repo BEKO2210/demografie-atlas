@@ -184,6 +184,79 @@ const arcs = topology.arcs;
 const pointsBefore = decoded.reduce((sum, arc) => sum + arc.length, 0);
 const pointsAfter = arcs.reduce((sum, arc) => sum + arc.length, 0);
 
+/** Die Oberfläche ist deutsch; `world-countries` liefert Regionen auf Englisch. */
+const REGIONS_DE = {
+  Africa: "Afrika",
+  Americas: "Amerika",
+  Antarctic: "Antarktis",
+  Asia: "Asien",
+  Europe: "Europa",
+  Oceania: "Ozeanien",
+};
+
+/**
+ * Deutsche Hauptstadtnamen. `world-countries` übersetzt Ländernamen, aber keine
+ * Hauptstädte. Aufgeführt sind nur die Fälle, in denen sich die deutsche
+ * Schreibweise unterscheidet; alles Übrige behält den Originalnamen.
+ */
+const CAPITALS_DE = {
+  Algiers: "Algier",
+  "Addis Ababa": "Addis Abeba",
+  Amman: "Amman",
+  Ashgabat: "Aschgabat",
+  Athens: "Athen",
+  Baghdad: "Bagdad",
+  Bangui: "Bangui",
+  Beijing: "Peking",
+  Belgrade: "Belgrad",
+  Bishkek: "Bischkek",
+  Bogotá: "Bogotá",
+  Brussels: "Brüssel",
+  Bucharest: "Bukarest",
+  Cairo: "Kairo",
+  Copenhagen: "Kopenhagen",
+  Damascus: "Damaskus",
+  Djibouti: "Dschibuti",
+  Dushanbe: "Duschanbe",
+  "Guatemala City": "Guatemala-Stadt",
+  Havana: "Havanna",
+  "Hong Kong": "Hongkong",
+  Jerusalem: "Jerusalem",
+  Khartoum: "Khartum",
+  Kyiv: "Kiew",
+  "Kuwait City": "Kuwait-Stadt",
+  Lisbon: "Lissabon",
+  Luxembourg: "Luxemburg",
+  "Mexico City": "Mexiko-Stadt",
+  Mogadishu: "Mogadischu",
+  Moscow: "Moskau",
+  Muscat: "Maskat",
+  "New Delhi": "Neu-Delhi",
+  Nicosia: "Nikosia",
+  "Nuku'alofa": "Nukuʻalofa",
+  "Panama City": "Panama-Stadt",
+  Prague: "Prag",
+  Pyongyang: "Pjöngjang",
+  Riyadh: "Riad",
+  Rome: "Rom",
+  "Sana'a": "Sanaa",
+  Singapore: "Singapur",
+  "Sri Jayawardenepura Kotte": "Sri Jayewardenepura Kotte",
+  Taipei: "Taipeh",
+  Tashkent: "Taschkent",
+  Tbilisi: "Tiflis",
+  Tehran: "Teheran",
+  Tokyo: "Tokio",
+  Tripoli: "Tripolis",
+  "Vatican City": "Vatikanstadt",
+  Vienna: "Wien",
+  Vientiane: "Vientiane",
+  Warsaw: "Warschau",
+  "Washington, D.C.": "Washington, D. C.",
+  Yerevan: "Erewan",
+  Zagreb: "Zagreb",
+};
+
 /** Nur die Felder, die die Oberfläche tatsächlich anzeigt. */
 const byNumericCode = new Map();
 for (const country of worldCountries) {
@@ -193,8 +266,8 @@ for (const country of worldCountries) {
     cca2: country.cca2,
     name: country.translations.deu?.common ?? country.name.common,
     flag: country.flag,
-    capital: country.capital?.[0] ?? "",
-    region: country.region,
+    capital: country.capital?.[0] ? (CAPITALS_DE[country.capital[0]] ?? country.capital[0]) : "",
+    region: REGIONS_DE[country.region] ?? country.region,
     latlng: country.latlng.map((value) => Math.round(value * 100) / 100),
     area: country.area,
   });
@@ -205,7 +278,14 @@ const meta = topology.objects.countries.geometries
   .map((geometry) => byNumericCode.get(String(Number(geometry.id))))
   .filter(Boolean);
 
-const territoryCount = topology.objects.countries.geometries.length;
+/**
+ * Gezählt wird, was sich tatsächlich auswählen lässt. Die Topologie enthält
+ * mehr Geometrien als es Metadatensätze gibt (Somaliland, Kosovo, Nordzypern,
+ * Indian Ocean Ter., Siachen Glacier) — diese Flächen reagieren auf einen Klick
+ * nicht und dürfen deshalb nicht mitgezählt werden.
+ */
+const territoryCount = meta.length;
+const geometryCount = topology.objects.countries.geometries.length;
 const germany = byNumericCode.get("276");
 if (!germany) throw new Error("Deutschland (ccn3 276) fehlt in world-countries");
 
@@ -217,7 +297,7 @@ writeFileSync(
   `// Automatisch erzeugt von scripts/build-world-data.mjs — nicht von Hand ändern.
 import type { WorldCountryMeta } from "./world-types";
 
-/** Anzahl der Gebiete in public/data/world.json. */
+/** Anzahl der auswählbaren Gebiete in public/data/world.json (mit Metadaten). */
 export const WORLD_TERRITORY_COUNT = ${territoryCount};
 
 /** Startauswahl des Globus; wird gebraucht, bevor die Weltdaten geladen sind. */
@@ -227,7 +307,7 @@ export const DEFAULT_COUNTRY: WorldCountryMeta = ${JSON.stringify(germany, null,
 
 const bytes = JSON.stringify({ topology, meta }).length;
 console.log(
-  `world.json: ${(bytes / 1024).toFixed(1)} kB · ${territoryCount} Gebiete · ${meta.length} Metadatensätze · ` +
+  `world.json: ${(bytes / 1024).toFixed(1)} kB · ${geometryCount} Geometrien · ${territoryCount} auswählbare Gebiete · ` +
     `Punkte ${pointsBefore} → ${pointsAfter} · geschützte Bögen ${protectedArcs.size}`,
 );
 if (repaired.length > 0) console.log(`unvereinfacht belassen: ${repaired.join(", ")}`);

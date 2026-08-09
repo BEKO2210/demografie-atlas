@@ -50,7 +50,7 @@ export default function SvgGlobe({
     return [{
       id: featureId(countryFeature),
       d,
-      title: `${meta?.flag ?? ""} ${displayName(meta)}`.trim(),
+      title: displayName(meta),
       meta,
     }];
   }), [path, world]);
@@ -140,7 +140,7 @@ export default function SvgGlobe({
           </g>
         )}
       </svg>
-      <div className="fallback-controls" aria-label="Weltkarte drehen">
+      <div className="fallback-controls" role="group" aria-label="Weltkarte drehen">
         <button type="button" aria-label="Welt nach Westen drehen" onClick={() => applyRotation([rotation[0] - 35, rotation[1]])}>←</button>
         <span>SVG / 3D Fallback</span>
         <button type="button" aria-label="Welt nach Osten drehen" onClick={() => applyRotation([rotation[0] + 35, rotation[1]])}>→</button>

@@ -1,0 +1,208 @@
+/*
+ * Ergänzende Regeln zu globals.css: mobile Navigation, Sprunglink und die
+ * wenigen neuen Bausteine (Globus-Schaltflächen, Reglerskala, Hinweiszeilen).
+ * Bewusst eine eigene Datei, damit sie sich nicht mit globals.css überschneidet.
+ * Wird in app/layout.tsx nach globals.css geladen.
+ */
+
+/* Sprunglink — erstes Element im Body, nur bei Tastaturfokus sichtbar. */
+.skip-link {
+  position: fixed;
+  z-index: 999;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -140%);
+  padding: 12px 20px;
+  border: 1px solid rgba(160, 185, 255, .35);
+  border-radius: 0 0 12px 12px;
+  background: #05091a;
+  color: #f3f0e8;
+  font-size: 14px;
+  transition: transform .18s ease;
+}
+
+.skip-link:focus-visible,
+.skip-link:focus {
+  transform: translate(-50%, 0);
+  outline: 2px solid #f0c878;
+  outline-offset: 2px;
+}
+
+/* --- Mobile Navigation ------------------------------------------------- */
+
+.mobile-nav { position: relative; display: none; }
+
+.mobile-nav-toggle {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  padding: 0;
+  border: 1px solid rgba(160, 185, 255, .18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .04);
+  color: inherit;
+  font: 520 12px var(--font-geist-mono), monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.mobile-nav-toggle:hover { background: rgba(255, 255, 255, .08); }
+
+.mobile-nav-bars { display: grid; gap: 3px; width: 15px; }
+.mobile-nav-bars i { height: 1.5px; background: currentColor; transition: transform .2s ease, opacity .2s ease; }
+.mobile-nav-bars.is-open i:nth-child(1) { transform: translateY(4.5px) rotate(45deg); }
+.mobile-nav-bars.is-open i:nth-child(2) { opacity: 0; }
+.mobile-nav-bars.is-open i:nth-child(3) { transform: translateY(-4.5px) rotate(-45deg); }
+
+.mobile-nav-panel {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 210px;
+  display: grid;
+  padding: 6px;
+  border: 1px solid rgba(160, 185, 255, .18);
+  border-radius: 14px;
+  background: rgba(5, 8, 18, .96);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
+  backdrop-filter: blur(18px);
+}
+
+.mobile-nav-panel[hidden] { display: none; }
+
+.mobile-nav-panel a {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: #d7d4cc;
+  font-size: 14px;
+}
+
+.mobile-nav-panel a:hover,
+.mobile-nav-panel a:focus-visible { background: rgba(255, 255, 255, .06); color: #fff; }
+
+@media (max-width: 1000px) {
+  .mobile-nav { display: block; }
+  /* Platz für den Knopf: die Leiste ist auf schmalen Geräten sonst zu voll. */
+  .nav-inner, .atlas-nav-inner { gap: 12px; }
+  /* Beide Leisten verschwinden unterhalb dieser Breite — hier ist der Ersatz. */
+  .nav-links, .atlas-nav-links { display: none; }
+}
+
+/* --- Globus ------------------------------------------------------------ */
+
+.globe-scene { position: absolute; inset: 0; display: grid; place-items: center; }
+
+/* Vier Schaltflächen statt zwei; Optik wie .fallback-controls. */
+.globe-controls {
+  grid-template-columns: repeat(2, 44px) auto repeat(2, 44px);
+  min-width: 0;
+}
+
+/*
+ * Textfassung des Globus: für Screenreader vorhanden, optisch nicht sichtbar.
+ * Der enthaltene Link bleibt erreichbar und wird bei Fokus eingeblendet.
+ */
+.globe-text-alt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.globe-text-alt:focus-within {
+  position: absolute;
+  z-index: 20;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 12px 14px;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+  border-radius: 12px;
+  background: rgba(5, 8, 18, .96);
+  color: #d7d4cc;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* --- Zahlen in Überschriften ------------------------------------------- */
+
+.future-overlay h3 > .future-number,
+.replacement-copy h3 > .replacement-number {
+  display: block;
+  margin-top: 0;
+  color: var(--gold);
+  font-size: clamp(80px, 11vw, 146px);
+  line-height: .78;
+  font-weight: 720;
+  letter-spacing: -.08em;
+}
+
+.replacement-copy h3 > .replacement-number { font-size: clamp(84px, 11vw, 146px); }
+
+.future-overlay h3 > span:last-child,
+.replacement-copy h3 > span:last-child { display: block; margin-top: 14px; }
+
+@media (max-width: 480px) {
+  .future-overlay h3 > .future-number { font-size: 87px; }
+  .replacement-copy h3 > .replacement-number { font-size: 88px; }
+}
+
+/* --- Reglerskala mit echten Positionen ---------------------------------- */
+
+.fertility-scale.is-positioned {
+  position: relative;
+  display: block;
+  min-height: 16px;
+}
+
+.fertility-scale.is-positioned span {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+}
+
+/* --- Hinweiszeilen ------------------------------------------------------ */
+
+.pyramid-note {
+  margin: 0;
+  padding: 14px 25px 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted-weak);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.pyramid-note b { color: #c7c4bc; font-weight: 600; }
+
+@media (max-width: 480px) {
+  .pyramid-note { padding: 12px 14px 14px; }
+}
+
+/* --- Zusammengelegte Fußzeile (Deutschland) ----------------------------- */
+
+/*
+ * Die Fußzeile hat seit dem Zusammenlegen eine Spalte mehr: Marke, Quellen,
+ * Atlas-Links und der Knopf „nach oben“.
+ */
+.footer .footer-inner { grid-template-columns: 1fr auto auto auto; }
+
+@media (max-width: 900px) {
+  .footer .footer-inner { grid-template-columns: 1fr auto; }
+}
