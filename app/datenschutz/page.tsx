@@ -4,9 +4,9 @@ import { LEGAL_UPDATED } from "../data/site";
 import { LegalShell } from "../components/legal-shell";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Datenschutz — Demografie Atlas",
+  title: "Datenschutzhinweise für den Demografie Atlas — transparent",
   description:
-    "Datenschutzhinweise für den Demografie Atlas: keine Cookies, kein Tracking, keine Analyse.",
+    "Datenschutzhinweise zum Demografie Atlas: keine Cookies, kein Tracking, keine Webanalyse. Was beim Besuch der Website technisch übertragen wird und warum.",
   path: "/datenschutz/",
 });
 

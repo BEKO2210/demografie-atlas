@@ -679,7 +679,7 @@ h2 { margin: 12px 0 0; font-size: clamp(48px, 7vw, 88px); line-height: .91; lett
   .brand > span:last-child b { display: none; }
   .hero { padding-top: 46px; }
   .eyebrow { flex-wrap: wrap; gap: 8px; }
-  h1 { font-size: clamp(45px, 14.4vw, 68px); }
+  h1 { font-size: clamp(38px, 11.6vw, 56px); }
   .hero-lead { font-size: 15px; }
   .hero-actions > .primary-action { width: 100%; justify-content: center; }
   .source-note { width: 100%; }

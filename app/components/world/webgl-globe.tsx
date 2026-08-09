@@ -328,7 +328,7 @@ export default function WebGlGlobe({
       <div className="fallback-controls globe-controls" role="group" aria-label="Globus drehen und zoomen">
           <button type="button" aria-label="Welt nach Westen drehen" onClick={() => moveCamera(-35, 0, 1)}>←</button>
           <button type="button" aria-label="Welt nach Osten drehen" onClick={() => moveCamera(35, 0, 1)}>→</button>
-          <span>3D / GLOBUS</span>
+          <span>3D-Globus</span>
           <button type="button" aria-label="Herauszoomen" onClick={() => moveCamera(0, 0, 1.25)}>−</button>
           <button type="button" aria-label="Hineinzoomen" onClick={() => moveCamera(0, 0, 0.8)}>+</button>
         </div>,

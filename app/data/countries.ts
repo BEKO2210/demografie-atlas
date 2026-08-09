@@ -62,7 +62,7 @@ export const countries: Country[] = [
     code: "JP",
     status: "planned",
     horizon: "In Planung",
-    signal: "Super-Aging",
+    signal: "Älteste Gesellschaft",
     description: "Der globale Referenzfall für eine sehr alte Gesellschaft.",
     accent: "#ff8e9f",
     accentSoft: "rgba(255, 104, 130, .15)",

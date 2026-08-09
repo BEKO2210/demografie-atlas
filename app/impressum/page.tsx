@@ -3,9 +3,9 @@ import { pageMetadata } from "../data/seo";
 import { LegalShell } from "../components/legal-shell";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Impressum — Demografie Atlas",
+  title: "Impressum — Anbieterkennzeichnung des Demografie Atlas",
   description:
-    "Anbieterkennzeichnung des Demografie Atlas nach § 5 DDG und § 18 MStV.",
+    "Anbieterkennzeichnung des Demografie Atlas nach § 5 DDG und § 18 MStV: verantwortliche Person, Kontaktadresse und rechtliche Grundlagen des Projekts.",
   path: "/impressum/",
 });
 

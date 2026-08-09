@@ -145,7 +145,7 @@ export default function SvgGlobe({
       {toolbar && createPortal(
       <div className="fallback-controls" role="group" aria-label="Weltkarte drehen">
           <button type="button" aria-label="Welt nach Westen drehen" onClick={() => applyRotation([rotation[0] - 35, rotation[1]])}>←</button>
-          <span>SVG / 3D Fallback</span>
+          <span>Vereinfachte Karte</span>
           <button type="button" aria-label="Welt nach Osten drehen" onClick={() => applyRotation([rotation[0] + 35, rotation[1]])}>→</button>
         </div>,
         toolbar,

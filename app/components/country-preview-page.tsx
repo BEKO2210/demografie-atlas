@@ -18,7 +18,7 @@ export function previewMetadata(slug: string): Metadata {
   const preview = previewBySlug.get(slug)!;
   return {
     ...pageMetadata({
-      title: `${country.name} — Demografie Atlas`,
+      title: `${country.name} im Demografie Atlas: Datenstory in Vorbereitung`,
       description: preview.summary,
       path: `/${slug}/`,
     }),

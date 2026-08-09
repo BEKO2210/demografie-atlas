@@ -22,7 +22,7 @@ export const countryPreviews: CountryPreview[] = [
   {
     slug: "frankreich",
     summary:
-      "Frankreich im Demografie Atlas: Geburtenentwicklung, Zuwanderung und Metropolregionen im europäischen Vergleich. Die Datenstory ist in Vorbereitung.",
+      "Frankreich im Demografie Atlas: Geburtenentwicklung, Zuwanderung und Metropolregionen im Vergleich zu Deutschland. Die Datenstory ist in Vorbereitung.",
     intro: [
       "Frankreich gilt lange als Ausnahme in Europa: Über Jahrzehnte lag die Geburtenziffer deutlich über der vieler Nachbarländer, gestützt von einer breit angelegten Familienpolitik. In den letzten Jahren sinkt sie allerdings auch dort spürbar — und damit stellt sich dieselbe Frage wie überall: Wie verändert das die Altersstruktur?",
       "Interessant ist Frankreich vor allem im Vergleich. Weil Ausgangslage und Politik sich von Deutschland unterscheiden, lässt sich an diesem Land ablesen, wie viel eine höhere Geburtenziffer über Jahrzehnte tatsächlich bewirkt — und wo auch sie an Grenzen stößt.",
@@ -40,7 +40,7 @@ export const countryPreviews: CountryPreview[] = [
   {
     slug: "italien",
     summary:
-      "Italien im Demografie Atlas: sehr niedrige Geburtenraten, starke regionale Unterschiede und ihre Folgen für die Altersstruktur. Die Datenstory ist in Vorbereitung.",
+      "Italien im Demografie Atlas: sehr niedrige Geburtenraten, starke Unterschiede zwischen Nord und Süd und Folgen für die Altersstruktur. Datenstory in Vorbereitung.",
     intro: [
       "Italien gehört seit Jahren zu den Ländern mit den niedrigsten Geburtenziffern Europas. Das Besondere ist dabei weniger der Landesdurchschnitt als die Spannweite im Land selbst: Zwischen Norden und Süden, zwischen Ballungsräumen und abwandernden Regionen liegen demografische Welten.",
       "Damit wird Italien zum Lehrstück dafür, dass eine nationale Zahl wenig erklärt. Erst die regionale Auflösung zeigt, wo Schulen schließen, wo Pflegebedarf zuerst steigt und wo Zuzug den Trend örtlich umkehrt.",
@@ -58,7 +58,7 @@ export const countryPreviews: CountryPreview[] = [
   {
     slug: "japan",
     summary:
-      "Japan im Demografie Atlas: der internationale Referenzfall für eine sehr alte und schrumpfende Gesellschaft. Die Datenstory ist in Vorbereitung.",
+      "Japan im Demografie Atlas: der internationale Referenzfall für eine bereits sehr alte und schrumpfende Gesellschaft. Die Datenstory ist in Vorbereitung.",
     intro: [
       "Japan ist der Fall, auf den alle schauen. Das Land hat eine der ältesten Bevölkerungen der Welt und schrumpft seit Jahren — nicht als Prognose, sondern als gemessene Gegenwart. Was anderswo als Zukunftsszenario diskutiert wird, ist dort Alltag.",
       "Deshalb lohnt der Blick dorthin doppelt: Er zeigt, wie eine Gesellschaft mit dieser Altersstruktur tatsächlich funktioniert — und er macht sichtbar, welche Anpassungen früh greifen und welche zu spät kommen.",
@@ -76,7 +76,7 @@ export const countryPreviews: CountryPreview[] = [
   {
     slug: "suedkorea",
     summary:
-      "Südkorea im Demografie Atlas: der schnellste Wandel einer Altersstruktur weltweit. Die Datenstory ist in Vorbereitung.",
+      "Südkorea im Demografie Atlas: die weltweit niedrigste Geburtenziffer und der schnellste Wandel einer Altersstruktur. Die Datenstory ist in Vorbereitung.",
     intro: [
       "Südkorea weist seit Jahren die weltweit niedrigste Geburtenziffer aus. Bemerkenswert ist dabei vor allem das Tempo: Das Land hat den Weg von einer jungen zu einer sehr alten Gesellschaft in wenigen Jahrzehnten zurückgelegt — eine Entwicklung, für die europäische Länder mehr als doppelt so lange gebraucht haben.",
       "Genau dieses Tempo macht Südkorea zum interessantesten Vergleichsfall. Es zeigt, was passiert, wenn eine Gesellschaft keine Generation Zeit hat, sich anzupassen.",
@@ -94,7 +94,7 @@ export const countryPreviews: CountryPreview[] = [
   {
     slug: "usa",
     summary:
-      "Die USA im Demografie Atlas: Bevölkerungsdynamik zwischen Zuwanderung, Regionen und Generationen. Die Datenstory ist in Vorbereitung.",
+      "Die USA im Demografie Atlas: Bevölkerungsdynamik zwischen Zuwanderung, Regionen und Generationen im wachsenden Industrieland. Datenstory in Vorbereitung.",
     intro: [
       "Die Vereinigten Staaten sind unter den großen Industrieländern lange die Ausnahme gewesen: Die Bevölkerung wuchs weiter, während sie anderswo stagnierte. Getragen wird dieses Wachstum inzwischen vor allem von Zuwanderung, denn die Geburtenziffer liegt auch dort unter dem bestandserhaltenden Niveau.",
       "Damit werden die USA zum Prüfstein für eine Frage, die auch in Deutschland gestellt wird: Wie viel kann Wanderung an einer Altersstruktur überhaupt ausrichten — und über welchen Zeitraum?",

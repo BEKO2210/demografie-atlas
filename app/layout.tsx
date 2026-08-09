@@ -18,9 +18,9 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   ...pageMetadata({
-    title: "Demografie Atlas — Länder in Bewegung",
+    title: "Demografie Atlas — Bevölkerung im Ländervergleich entdecken",
     description:
-      "Ein moderner, interaktiver Atlas über Altersstrukturen, Generationen und die demografische Zukunft verschiedener Länder.",
+      "Interaktiver Atlas über Altersstrukturen, Geburten und Wanderung: Deutschland live, weitere Länder wie Frankreich, Italien und Japan folgen in Kürze.",
     path: "/",
   }),
   applicationName: SITE_NAME,

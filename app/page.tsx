@@ -83,7 +83,7 @@ export default function AtlasHome() {
             <a href="#system">System</a>
             <a href={sitePath("/datenschutz")}>Datenschutz</a>
           </div>
-          <span className="atlas-live-chip"><i /> 1 Atlas live</span>
+          <span className="atlas-live-chip"><i /> 1 von 236 Ländern ausgebaut</span>
           <MobileNav
             links={[
               { href: "#laender", label: "Länder" },
@@ -160,7 +160,7 @@ export default function AtlasHome() {
             <div className="system-steps">
               <div><b>01</b><span>Amtliche Daten</span><small>Quellen prüfen</small></div>
               <div><b>02</b><span>Ländermodell</span><small>Kohorten kalibrieren</small></div>
-              <div><b>03</b><span>Live Atlas</span><small>Interaktiv veröffentlichen</small></div>
+              <div><b>03</b><span>Veröffentlichung</span><small>Interaktiv freigeben</small></div>
             </div>
           </div>
         </div>

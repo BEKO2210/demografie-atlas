@@ -64,7 +64,7 @@ export default function Home() {
         <div className="hero-grid">
           <div className="hero-copy">
             <div className="eyebrow"><span>Interaktive Datenstory</span><b>2025–2070</b></div>
-            <h1>Deutschland<br /><em>wird älter.</em><br />Nicht kleiner gedacht.</h1>
+            <h1>Deutschland<br /><em>altert.</em><br />Es schrumpft langsamer als gedacht.</h1>
             <p className="hero-lead">
               Beobachte, wie 83 Millionen Menschen durch die Zeit wandern — und wie Geburten,
               längeres Leben und Zuwanderung die Form eines Landes verändern.
@@ -80,7 +80,7 @@ export default function Home() {
             <div className="year-orbit orbit-two"><span>2040</span></div>
             <div className="year-orbit orbit-three"><span>2070</span></div>
             <div className="hero-core"><strong>74,7</strong><span>Millionen<br />im Jahr 2070</span></div>
-            <div className="hero-caption"><Icon name="spark" /> Moderate Destatis-Variante G2L2W2</div>
+            <div className="hero-caption"><Icon name="spark" /> Mittlere Annahme des Statistischen Bundesamts</div>
           </div>
         </div>
 
@@ -127,7 +127,7 @@ export default function Home() {
           <article className="future-card data-card reveal">
             <AtlasArt atlas="development" quadrant={0} className="future-art" />
             <div className="future-overlay">
-              <span className="data-chip">Variante 2 · G2L2W2</span>
+              <span className="data-chip">Mittlere Annahme · Variante 2 von 27</span>
               <h3>
                 <span className="future-number">74,7</span>
                 <span>Millionen Menschen im Jahr 2070</span>
@@ -289,7 +289,7 @@ export default function Home() {
         <div className="wrap footer-inner">
           <div>
             <a className="brand footer-brand" href={sitePath()}><BrandFlag /><span>DEMOGRAFIE <b>/ DE</b></span></a>
-            <p>Eine interaktive Datenstory über Deutschlands Wandel — ohne fixes „Aussterbedatum“.</p>
+            <p>Eine interaktive Datenstory über Deutschlands Bevölkerung: Altersstruktur, Geburten und Wanderung von 2025 bis 2070.</p>
           </div>
           <div className="source-links">
             <span>Primärquellen</span>

@@ -7,10 +7,15 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
+    // Bauergebnisse und Zwischenstände — nichts davon ist Quelltext.
     ".next/**",
     "out/**",
-    "build/**",
+    "dist/**",
+    ".vinext/**",
+    ".wrangler/**",
+    ".sites-runtime/**",
+    "node_modules/**",
+    "public/**",
     "next-env.d.ts",
   ]),
 ]);

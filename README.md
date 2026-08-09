@@ -26,13 +26,14 @@ npm run dev
 ## Prüfen
 
 ```bash
-npm run lint
-npx tsc --noEmit
-npm run build
-GITHUB_PAGES=true NEXT_PUBLIC_BASE_PATH=/demografie-atlas npx next build
+npm run check
 ```
 
-Der letzte Befehl erzeugt den statischen GitHub-Pages-Export in `out/`.
+Die Pflichtprüfung: Typen, Lint, Tests, Pages-Build — und danach Fragen an den
+fertigen Export in `out/`, also an das, was Besucher wirklich bekommen. Läuft
+alles durch, zeigt sie am Ende, welche Länder noch offen sind.
+
+Einzeln geht auch: `npm run build` (Pages-Export), `npm test`, `npm run lint`.
 
 ## GitHub Pages
 
@@ -44,7 +45,15 @@ Impressum und Datenschutzerklärung sind mit den echten Betreiberangaben ausgef�
 
 Live: https://beko2210.github.io/demografie-atlas/
 
-Die technische Übergabe mit exakten GitHub-Schritten und Architekturhinweisen steht in [`CLAUDE_HANDOFF.md`](./CLAUDE_HANDOFF.md).
+## Mitarbeiten
+
+Die Arbeitsweise, die Fallen des Projekts und die Anleitung für ein neues Land
+stehen in [`AGENTS.md`](./AGENTS.md) und ausführlich unter
+`.claude/skills/demografie-atlas/`. Claude Code lädt das automatisch; mit
+anderen Werkzeugen liest man dieselben Dateien von Hand.
+
+Kurz gesagt: **Jedes Land zeigt dieselben Informationen wie Deutschland, bekommt
+aber seine eigene Gestaltung.**
 
 ## Weltdaten und Rauschtextur neu erzeugen
 
