@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "./mobile-nav.css";
 import { pageMetadata, SITE_NAME, SITE_URL } from "./data/seo";
+import { Analytics } from "./components/analytics";
 
 const assetBase = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -88,6 +89,7 @@ export default function RootLayout({
         {/* Erstes fokussierbares Element der Seite; nur bei Tastaturfokus sichtbar. */}
         <a className="skip-link" href="#inhalt">Zum Inhalt springen</a>
         {children}
+        <Analytics />
         <script
           type="application/ld+json"
           // Eigener, statisch erzeugter Inhalt — keine Fremddaten.

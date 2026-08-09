@@ -6,7 +6,7 @@ import { LegalShell } from "../components/legal-shell";
 export const metadata: Metadata = pageMetadata({
   title: "Datenschutzhinweise für den Demografie Atlas — transparent",
   description:
-    "Datenschutzhinweise zum Demografie Atlas: keine Cookies, kein Tracking, keine Webanalyse. Was beim Besuch der Website technisch übertragen wird und warum.",
+    "Datenschutzhinweise zum Demografie Atlas: keine Cookies, keine Profilbildung, Reichweitenmessung auf eigenem Server. Was übertragen wird und warum.",
   path: "/datenschutz/",
 });
 
@@ -15,7 +15,7 @@ export default function DatenschutzPage() {
     <LegalShell
       kicker="Datenschutzhinweise"
       title="Datenschutz"
-      intro="Transparent und auf das Wesentliche reduziert: Die Website setzt derzeit keine Analyse-, Marketing- oder Tracking-Dienste ein."
+      intro="Transparent und auf das Wesentliche reduziert: keine Cookies, keine Werbung, keine Profilbildung — und eine Reichweitenmessung, die ohne personenbezogene Daten auskommt."
     >
       <section>
         <h2>1. Verantwortlicher</h2>
@@ -55,16 +55,42 @@ export default function DatenschutzPage() {
       </section>
 
       <section>
-        <h2>4. Cookies, Tracking und lokale Speicherung</h2>
+        <h2>4. Cookies und lokale Speicherung</h2>
         <p>
-          Der Demografie Atlas setzt derzeit keine eigenen Cookies, keine Werbetechnologien,
-          keine Webanalyse und kein Nutzerprofiling ein. Die Schieberegler und Animationen
-          werden lokal im Browser ausgeführt; ihre Werte werden nicht an den Betreiber gesendet.
+          Der Demografie Atlas setzt keine eigenen Cookies, keine Werbetechnologien
+          und kein Nutzerprofiling ein. Die Schieberegler und Animationen werden lokal
+          im Browser ausgeführt; ihre Werte werden nicht an den Betreiber gesendet.
         </p>
       </section>
 
       <section>
-        <h2>5. Externe Links</h2>
+        <h2>5. Reichweitenmessung</h2>
+        <p>
+          Um zu sehen, welche Inhalte gelesen werden, kommt Plausible Analytics zum
+          Einsatz. Die Software läuft auf einem eigenen Server des Betreibers unter
+          stats.it-handwerk-stuttgart.de; es werden keine Daten an Dritte übermittelt.
+        </p>
+        <p>
+          Plausible arbeitet ohne Cookies und ohne eine Kennung, die sich über mehrere
+          Besuche hinweg zuordnen ließe. Erfasst werden ausschließlich zusammengefasste
+          Werte: aufgerufene Seite, verweisende Seite, ungefährer Standort auf Länderebene,
+          Gerätetyp, Browser und Betriebssystem. Die IP-Adresse wird nicht gespeichert;
+          sie geht nur in eine tagesaktuelle, nicht umkehrbare Prüfsumme ein, mit der
+          wiederholte Aufrufe innerhalb eines Tages erkannt werden.
+        </p>
+        <p>
+          Ein Personenbezug entsteht dabei nicht, eine Einwilligung ist deshalb nicht
+          erforderlich. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; das berechtigte
+          Interesse liegt darin, die Inhalte auf Grundlage tatsächlicher Nutzung zu
+          verbessern.
+        </p>
+        <div className="legal-source-row">
+          <a href="https://plausible.io/data-policy" target="_blank" rel="noreferrer">Plausible · Datenrichtlinie ↗</a>
+        </div>
+      </section>
+
+      <section>
+        <h2>6. Externe Links</h2>
         <p>
           Verweise auf Destatis, GitHub und andere Primärquellen werden erst beim Anklicken
           aufgerufen. Ab diesem Zeitpunkt gelten die Datenschutzhinweise des jeweiligen Anbieters.
@@ -72,7 +98,7 @@ export default function DatenschutzPage() {
       </section>
 
       <section>
-        <h2>6. Deine Rechte</h2>
+        <h2>7. Deine Rechte</h2>
         <p>
           Soweit die gesetzlichen Voraussetzungen vorliegen, bestehen insbesondere Rechte auf
           Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit
@@ -82,7 +108,7 @@ export default function DatenschutzPage() {
       </section>
 
       <section>
-        <h2>7. Aktualität</h2>
+        <h2>8. Aktualität</h2>
         <p>
           Diese Hinweise entsprechen dem technischen Stand vom {LEGAL_UPDATED}. Werden später
           Formulare, Analysen, Newsletter oder weitere Dienste ergänzt, wird die Erklärung vor
