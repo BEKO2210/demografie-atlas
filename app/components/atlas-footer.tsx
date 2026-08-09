@@ -1,4 +1,5 @@
 import { sitePath } from "../data/site";
+import { AtlasMark } from "./atlas-mark";
 
 type AtlasFooterProps = {
   compact?: boolean;
@@ -11,7 +12,7 @@ export function AtlasFooter({ compact = false, countryCode }: AtlasFooterProps) 
       <div className="wrap atlas-footer-inner">
         <div className="atlas-footer-brand">
           <a className="brand" href={sitePath()} aria-label="Zur Länderübersicht">
-            <span className="brand-mark"><span>A</span></span>
+            <AtlasMark />
             <span>DEMOGRAFIE <b>/ ATLAS</b></span>
           </a>
           {!compact && (

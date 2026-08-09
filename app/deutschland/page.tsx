@@ -535,7 +535,7 @@ export default function Home() {
         <div className="nav-progress" style={{ transform: `scaleX(${scrollProgress})` }} />
         <div className="wrap nav-inner">
           <a className="brand" href={sitePath()} aria-label="Zur Länderübersicht">
-            <span className="brand-mark"><span>D</span></span>
+            <span className="brand-mark"><span className="brand-flag" role="img" aria-label="Flagge Deutschland">🇩🇪</span></span>
             <span>DEMOGRAFIE <b>/ DE</b></span>
           </a>
           <div className="nav-links">
@@ -762,7 +762,7 @@ export default function Home() {
       <footer className="footer">
         <div className="wrap footer-inner">
           <div>
-            <a className="brand footer-brand" href={sitePath()}><span className="brand-mark"><span>D</span></span><span>DEMOGRAFIE <b>/ DE</b></span></a>
+            <a className="brand footer-brand" href={sitePath()}><span className="brand-mark"><span className="brand-flag" role="img" aria-label="Flagge Deutschland">🇩🇪</span></span><span>DEMOGRAFIE <b>/ DE</b></span></a>
             <p>Eine interaktive Datenstory über Deutschlands Wandel — ohne fixes „Aussterbedatum“.</p>
           </div>
           <div className="source-links">

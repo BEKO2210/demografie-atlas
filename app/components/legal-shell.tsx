@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { AtlasFooter } from "./atlas-footer";
 import { sitePath } from "../data/site";
+import { AtlasMark } from "./atlas-mark";
 
 export function LegalShell({
   kicker,
@@ -19,7 +20,7 @@ export function LegalShell({
       <nav className="atlas-nav legal-nav">
         <div className="wrap atlas-nav-inner">
           <a className="brand" href={sitePath()}>
-            <span className="brand-mark"><span>A</span></span>
+            <AtlasMark />
             <span>DEMOGRAFIE <b>/ ATLAS</b></span>
           </a>
           <a className="legal-back" href={sitePath()}>← Zur Länderübersicht</a>

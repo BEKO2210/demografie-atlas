@@ -6,6 +6,7 @@ import { AtlasFooter } from "./components/atlas-footer";
 import { InteractiveWorld } from "./components/interactive-world";
 import { countries, type Country } from "./data/countries";
 import { sitePath } from "./data/site";
+import { AtlasMark } from "./components/atlas-mark";
 
 function ArrowIcon() {
   return (
@@ -94,7 +95,7 @@ export default function AtlasHome() {
       <nav className="atlas-nav">
         <div className="wrap atlas-nav-inner">
           <a className="brand" href={sitePath()} aria-label="Demografie Atlas Startseite">
-            <span className="brand-mark"><span>A</span></span>
+            <AtlasMark />
             <span>DEMOGRAFIE <b>/ ATLAS</b></span>
           </a>
           <div className="atlas-nav-links">
