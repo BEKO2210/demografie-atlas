@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ComponentType } from "react";
 import { countries } from "../data/countries";
 import { sitePath } from "../data/site";
-import { DEFAULT_COUNTRY, WORLD_TERRITORY_COUNT } from "../data/world-constants";
+import { WORLD_TERRITORY_COUNT } from "../data/world-constants";
 import type { WorldCountryMeta, WorldData } from "../data/world-types";
 import type { WorldRendererProps } from "./world/shared";
 import { usePrefersReducedMotion } from "./use-reduced-motion";
@@ -44,7 +44,8 @@ function whenIdle(callback: () => void, timeout: number) {
 export function InteractiveWorld() {
   const stageRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState(620);
-  const [selected, setSelected] = useState<WorldCountryMeta>(DEFAULT_COUNTRY);
+  // Kein Land vorausgewählt: die Statuskarte erscheint erst nach einem Klick.
+  const [selected, setSelected] = useState<WorldCountryMeta | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [world, setWorld] = useState<WorldData | null>(null);
@@ -125,9 +126,9 @@ export function InteractiveWorld() {
   const onReady = useCallback(() => setReady(true), []);
   const onSelect = useCallback((meta: WorldCountryMeta) => setSelected(meta), []);
 
-  const selectedAtlasCountry = atlasCountryByCode.get(selected.cca2);
+  const selectedAtlasCountry = selected ? atlasCountryByCode.get(selected.cca2) : undefined;
   const selectedStatus = selectedAtlasCountry?.status ?? "planned";
-  const selectedName = selectedAtlasCountry?.name ?? selected.name;
+  const selectedName = selectedAtlasCountry?.name ?? selected?.name ?? "";
 
   return (
     <div className="interactive-world" ref={stageRef}>
@@ -139,7 +140,7 @@ export function InteractiveWorld() {
           <Renderer
             size={size}
             world={world}
-            selectedId={selected.id}
+            selectedId={selected?.id ?? ""}
             hoveredId={hoveredId}
             reducedMotion={reducedMotion}
             onHover={setHoveredId}
@@ -149,20 +150,22 @@ export function InteractiveWorld() {
         )}
       </div>
 
-      <div className="globe-interface" aria-live="polite">
-        <div className="globe-selection-top">
-          <span className="globe-selected-flag" role="img" aria-label={`Flagge ${selectedName}`}>{selected.flag}</span>
-          <span className={`country-status status-${selectedStatus}`}><i /> {selectedStatus === "live" ? "Live" : selectedStatus === "next" ? "Als Nächstes" : "Auswählbar"}</span>
+      {selected && (
+        <div className="globe-interface" aria-live="polite">
+          <div className="globe-selection-top">
+            <span className="globe-selected-flag" role="img" aria-label={`Flagge ${selectedName}`}>{selected.flag}</span>
+            <span className={`country-status status-${selectedStatus}`}><i /> {selectedStatus === "live" ? "Live" : selectedStatus === "next" ? "Als Nächstes" : "Auswählbar"}</span>
+          </div>
+          <span className="globe-selection-code">{selected.cca2} / {selected.region}</span>
+          <strong>{selectedName}</strong>
+          <small>{selected.capital ? `Hauptstadt · ${selected.capital}` : "Interaktives Länderprofil"}</small>
+          {selectedStatus === "live" ? (
+            <a href={sitePath(`/${selectedAtlasCountry?.slug}`)}>Atlas öffnen <span>↗</span></a>
+          ) : (
+            <span className="globe-planned-label">Datenstory in Vorbereitung</span>
+          )}
         </div>
-        <span className="globe-selection-code">{selected.cca2} / {selected.region}</span>
-        <strong>{selectedName}</strong>
-        <small>{selected.capital ? `Hauptstadt · ${selected.capital}` : "Interaktives Länderprofil"}</small>
-        {selectedStatus === "live" ? (
-          <a href={sitePath(`/${selectedAtlasCountry?.slug}`)}>Atlas öffnen <span>↗</span></a>
-        ) : (
-          <span className="globe-planned-label">Datenstory in Vorbereitung</span>
-        )}
-      </div>
+      )}
 
       <div className="globe-instructions"><i /> Ziehen zum Drehen <b>·</b> Scrollen zum Zoomen <b>·</b> Land anklicken</div>
       <div className="globe-count"><strong>{WORLD_TERRITORY_COUNT}</strong><span>Gebiete<br />interaktiv</span></div>

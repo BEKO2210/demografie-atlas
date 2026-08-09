@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { MeshPhongMaterial } from "three";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MeshPhongMaterial, TextureLoader, SRGBColorSpace } from "three";
 import Globe, { type GlobeMethods } from "react-globe.gl";
 import { countries } from "../../data/countries";
+import { sitePath } from "../../data/site";
 import { DEFAULT_COUNTRY } from "../../data/world-constants";
 import type { CountryFeature } from "../../data/world-types";
-import { displayName, featureId, metaForFeature, type WorldRendererProps } from "./shared";
+import { CountryIndex } from "./hit-test";
+import { displayName, featureId, type WorldRendererProps } from "./shared";
 
 type GlobePoint = {
   lat: number;
@@ -16,6 +18,8 @@ type GlobePoint = {
   flag: string;
   status: "live" | "next" | "planned";
 };
+
+type Tip = { x: number; y: number; flag: string; name: string; note: string };
 
 const atlasCountryByCode = new Map(countries.map((country) => [country.code, country]));
 
@@ -44,19 +48,41 @@ export default function WebGlGlobe({
   const isVisible = useRef(false);
   const interactionUntil = useRef(0);
   const idleTimer = useRef<number | null>(null);
-  const didInitialPov = useRef(false);
+  const pointerFrame = useRef<number | null>(null);
+  const pointerAt = useRef<{ x: number; y: number } | null>(null);
+  const [tip, setTip] = useState<Tip | null>(null);
 
-  const globeMaterial = useMemo(
-    () => new MeshPhongMaterial({
-      color: "#07101f",
-      emissive: "#030815",
-      emissiveIntensity: 0.72,
+  const index = useMemo(() => new CountryIndex(world), [world]);
+
+  /**
+   * Die Länderflächen liegen als Textur auf der Kugel — ein Zeichenaufruf statt
+   * eines Meshes je Polygonring. Angehoben wird nur noch, was hervorgehoben ist.
+   */
+  const globeMaterial = useMemo(() => {
+    // Die Textur trägt bereits die fertigen Farben. Sie hängt deshalb an
+    // emissiveMap statt an map — sonst dunkelt die Szenenbeleuchtung sie ab und
+    // die Kontinente verschwinden fast im Ozean. Der Phong-Glanz bleibt erhalten.
+    const material = new MeshPhongMaterial({
+      color: "#000000",
+      emissive: "#ffffff",
+      emissiveIntensity: 1,
       shininess: 22,
       transparent: true,
       opacity: 0.97,
-    }),
-    [],
-  );
+    });
+    new TextureLoader().load(sitePath("/assets/globe-texture.png"), (texture) => {
+      texture.colorSpace = SRGBColorSpace;
+      material.emissiveMap = texture;
+      material.needsUpdate = true;
+    });
+    return material;
+  }, []);
+
+  /** Nur Auswahl und Zeigerposition bekommen echte Geometrie. */
+  const highlighted = useMemo(() => {
+    const ids = new Set([selectedId, hoveredId].filter(Boolean) as string[]);
+    return world.features.filter((item) => ids.has(featureId(item)));
+  }, [world, selectedId, hoveredId]);
 
   const atlasPoints = useMemo<GlobePoint[]>(() => countries.flatMap((atlasCountry) => {
     const match = [...world.metaById.values()].find((entry) => entry.cca2 === atlasCountry.code);
@@ -73,12 +99,12 @@ export default function WebGlGlobe({
 
   const atlasArcs = useMemo(() => atlasPoints
     .filter((point) => point.code !== "DE")
-    .map((point, index) => ({
+    .map((point, index_) => ({
       startLat: DEFAULT_COUNTRY.latlng[0],
       startLng: DEFAULT_COUNTRY.latlng[1],
       endLat: point.lat,
       endLng: point.lng,
-      color: index % 2 ? ["rgba(118,235,255,.8)", "rgba(154,120,255,.22)"] : ["rgba(154,120,255,.7)", "rgba(118,235,255,.2)"],
+      color: index_ % 2 ? ["rgba(118,235,255,.8)", "rgba(154,120,255,.22)"] : ["rgba(154,120,255,.7)", "rgba(118,235,255,.2)"],
     })), [atlasPoints]);
 
   /**
@@ -89,10 +115,7 @@ export default function WebGlGlobe({
     const globe = globeRef.current;
     if (!globe || !isReady.current) return;
     const interacting = Date.now() < interactionUntil.current;
-    const shouldRun =
-      isVisible.current &&
-      !document.hidden &&
-      (!reducedMotion || interacting);
+    const shouldRun = isVisible.current && !document.hidden && (!reducedMotion || interacting);
     if (shouldRun === isRunning.current) return;
     isRunning.current = shouldRun;
     if (shouldRun) globe.resumeAnimation();
@@ -110,6 +133,36 @@ export default function WebGlGlobe({
     }, 1300);
   }, [syncAnimation]);
 
+  /** Zeigerposition → Kugelkoordinate → Land. Höchstens einmal je Frame. */
+  const resolvePointer = useCallback(() => {
+    pointerFrame.current = null;
+    const globe = globeRef.current;
+    const host = hostRef.current;
+    const at = pointerAt.current;
+    if (!globe || !host || !at) return;
+
+    const rect = host.getBoundingClientRect();
+    const coords = globe.toGlobeCoords(at.x - rect.left, at.y - rect.top);
+    const item = coords ? index.find(coords.lat, coords.lng) : null;
+
+    onHover(item ? featureId(item) : null);
+    const controls = globe.controls();
+    if (controls) controls.autoRotate = !item && !reducedMotion;
+
+    if (!item) {
+      setTip(null);
+      return;
+    }
+    const meta = index.meta(item);
+    setTip({
+      x: at.x - rect.left,
+      y: at.y - rect.top,
+      flag: meta?.flag ?? "◌",
+      name: displayName(meta),
+      note: meta && atlasCountryByCode.has(meta.cca2) ? "Atlas vorgemerkt" : "Land auswählen",
+    });
+  }, [index, onHover, reducedMotion]);
+
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
@@ -126,10 +179,36 @@ export default function WebGlGlobe({
     const onVisibilityChange = () => syncAnimation();
     document.addEventListener("visibilitychange", onVisibilityChange);
 
-    const interactionOptions = { passive: true } as const;
-    host.addEventListener("pointerdown", noteInteraction, interactionOptions);
-    host.addEventListener("wheel", noteInteraction, interactionOptions);
-    host.addEventListener("touchstart", noteInteraction, interactionOptions);
+    const passive = { passive: true } as const;
+    const onPointerMove = (event: PointerEvent) => {
+      pointerAt.current = { x: event.clientX, y: event.clientY };
+      if (pointerFrame.current === null) {
+        pointerFrame.current = requestAnimationFrame(resolvePointer);
+      }
+    };
+    const onPointerLeave = () => {
+      pointerAt.current = null;
+      setTip(null);
+      onHover(null);
+      const controls = globeRef.current?.controls();
+      if (controls) controls.autoRotate = !reducedMotion;
+    };
+    const onClick = (event: MouseEvent) => {
+      const globe = globeRef.current;
+      if (!globe) return;
+      const rect = host.getBoundingClientRect();
+      const coords = globe.toGlobeCoords(event.clientX - rect.left, event.clientY - rect.top);
+      const item = coords ? index.find(coords.lat, coords.lng) : null;
+      const meta = item ? index.meta(item) : undefined;
+      if (meta) onSelect(meta);
+    };
+
+    host.addEventListener("pointerdown", noteInteraction, passive);
+    host.addEventListener("wheel", noteInteraction, passive);
+    host.addEventListener("touchstart", noteInteraction, passive);
+    host.addEventListener("pointermove", onPointerMove, passive);
+    host.addEventListener("pointerleave", onPointerLeave, passive);
+    host.addEventListener("click", onClick);
 
     return () => {
       observer.disconnect();
@@ -137,11 +216,16 @@ export default function WebGlGlobe({
       host.removeEventListener("pointerdown", noteInteraction);
       host.removeEventListener("wheel", noteInteraction);
       host.removeEventListener("touchstart", noteInteraction);
+      host.removeEventListener("pointermove", onPointerMove);
+      host.removeEventListener("pointerleave", onPointerLeave);
+      host.removeEventListener("click", onClick);
       if (idleTimer.current !== null) window.clearTimeout(idleTimer.current);
+      if (pointerFrame.current !== null) cancelAnimationFrame(pointerFrame.current);
     };
-  }, [noteInteraction, syncAnimation]);
+  }, [index, noteInteraction, onHover, onSelect, reducedMotion, resolvePointer, syncAnimation]);
 
   useEffect(() => () => {
+    globeMaterial.emissiveMap?.dispose();
     globeMaterial.dispose();
     const globe = globeRef.current;
     if (!globe) return;
@@ -170,13 +254,9 @@ export default function WebGlGlobe({
     onReady();
   }, [onReady, reducedMotion, syncAnimation]);
 
-  // Kameraflug bei Auswahl — der erste Lauf gehört zur Startpose aus handleReady.
+  // Kameraflug, sobald ein Land gewählt wurde. Ohne Auswahl bleibt die Startpose.
   useEffect(() => {
-    if (!didInitialPov.current) {
-      didInitialPov.current = true;
-      return;
-    }
-    const meta = world.metaById.get(selectedId);
+    const meta = selectedId ? world.metaById.get(selectedId) : undefined;
     if (!meta) return;
     globeRef.current?.pointOfView({
       lat: meta.latlng[0],
@@ -197,56 +277,20 @@ export default function WebGlGlobe({
         atmosphereColor="#8d7cff"
         atmosphereAltitude={0.16}
         showGraticules
-        polygonsData={world.features}
-        polygonAltitude={(item) => {
-          const id = featureId(item as CountryFeature);
-          if (id === selectedId) return 0.045;
-          if (id === hoveredId) return 0.022;
-          return 0.008;
-        }}
-        polygonCapColor={(item) => {
-          const countryFeature = item as CountryFeature;
-          const id = featureId(countryFeature);
-          const meta = metaForFeature(world, countryFeature);
-          if (id === selectedId) return "rgba(120, 236, 255, .92)";
-          if (id === hoveredId) return "rgba(174, 151, 255, .82)";
-          if (meta?.cca2 === "DE") return "rgba(94, 255, 194, .72)";
-          if (meta && atlasCountryByCode.has(meta.cca2)) return "rgba(116, 157, 255, .42)";
-          return "rgba(74, 91, 130, .28)";
-        }}
+        polygonsData={highlighted}
+        polygonAltitude={(item) => (featureId(item as CountryFeature) === selectedId ? 0.045 : 0.022)}
+        polygonCapColor={(item) => (featureId(item as CountryFeature) === selectedId
+          ? "rgba(120, 236, 255, .92)"
+          : "rgba(174, 151, 255, .82)")}
         polygonSideColor={() => "rgba(31, 45, 75, .34)"}
         polygonStrokeColor={() => "rgba(150, 187, 255, .18)"}
         polygonsTransitionDuration={240}
-        polygonLabel={(item) => {
-          const meta = metaForFeature(world, item as CountryFeature);
-          const status = meta && atlasCountryByCode.has(meta.cca2) ? "Atlas vorgemerkt" : "Land auswählen";
-          return `<div class="globe-tip"><span>${meta?.flag ?? "◌"}</span><strong>${displayName(meta)}</strong><small>${status}</small></div>`;
-        }}
-        onPolygonHover={(item) => {
-          const countryFeature = item as CountryFeature | null;
-          onHover(countryFeature ? featureId(countryFeature) : null);
-          const controls = globeRef.current?.controls();
-          if (controls) controls.autoRotate = !countryFeature && !reducedMotion;
-        }}
-        onPolygonClick={(item) => {
-          const meta = metaForFeature(world, item as CountryFeature);
-          if (meta) onSelect(meta);
-        }}
         pointsData={atlasPoints}
         pointLat="lat"
         pointLng="lng"
         pointRadius={(item) => (item as GlobePoint).status === "live" ? 0.52 : 0.34}
         pointAltitude={(item) => (item as GlobePoint).status === "live" ? 0.12 : 0.065}
         pointColor={(item) => (item as GlobePoint).status === "live" ? "#63ffc2" : "#8d7cff"}
-        pointLabel={(item) => {
-          const point = item as GlobePoint;
-          return `<div class="globe-tip"><span>${point.flag}</span><strong>${point.name}</strong><small>${point.status === "live" ? "Atlas live" : "In Vorbereitung"}</small></div>`;
-        }}
-        onPointClick={(item) => {
-          const point = item as GlobePoint;
-          const meta = [...world.metaById.values()].find((entry) => entry.cca2 === point.code);
-          if (meta) onSelect(meta);
-        }}
         arcsData={atlasArcs}
         arcStartLat="startLat"
         arcStartLng="startLng"
@@ -260,6 +304,13 @@ export default function WebGlGlobe({
         arcDashAnimateTime={5200}
         onGlobeReady={handleReady}
       />
+      {tip && (
+        <div className="globe-tip globe-tip-floating" style={{ left: tip.x, top: tip.y }}>
+          <span>{tip.flag}</span>
+          <strong>{tip.name}</strong>
+          <small>{tip.note}</small>
+        </div>
+      )}
     </div>
   );
 }
