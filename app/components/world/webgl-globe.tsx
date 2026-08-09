@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   LinearFilter,
   LinearMipmapLinearFilter,
@@ -41,6 +42,7 @@ export default function WebGlGlobe({
   onHover,
   onSelect,
   onReady,
+  toolbar,
 }: WorldRendererProps) {
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -251,7 +253,13 @@ export default function WebGlGlobe({
        */
       controls.enableZoom = false;
       controls.enablePan = false;
-      controls.touches = { ONE: TOUCH.PAN, TWO: TOUCH.DOLLY_ROTATE };
+      /**
+       * Ein Finger dreht, zwei Finger zoomen. Zusammen mit `touch-action: pan-y`
+       * teilt sich die Geste sauber auf: senkrechtes Wischen behält der Browser
+       * für die Seite, waagerechtes Wischen erreicht den Globus. Vorher lag ein
+       * Finger auf „Verschieben", was abgeschaltet ist — Wischen tat also nichts.
+       */
+      controls.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_ROTATE };
 
       const renderer = globe.renderer();
       renderer.setPixelRatio(targetPixelRatio());
@@ -316,13 +324,16 @@ export default function WebGlGlobe({
         onGlobeReady={handleReady}
       />
       </div>
+      {toolbar && createPortal(
       <div className="fallback-controls globe-controls" role="group" aria-label="Globus drehen und zoomen">
-        <button type="button" aria-label="Welt nach Westen drehen" onClick={() => moveCamera(-35, 0, 1)}>←</button>
-        <button type="button" aria-label="Welt nach Osten drehen" onClick={() => moveCamera(35, 0, 1)}>→</button>
-        <span>3D / GLOBUS</span>
-        <button type="button" aria-label="Herauszoomen" onClick={() => moveCamera(0, 0, 1.25)}>−</button>
-        <button type="button" aria-label="Hineinzoomen" onClick={() => moveCamera(0, 0, 0.8)}>+</button>
-      </div>
+          <button type="button" aria-label="Welt nach Westen drehen" onClick={() => moveCamera(-35, 0, 1)}>←</button>
+          <button type="button" aria-label="Welt nach Osten drehen" onClick={() => moveCamera(35, 0, 1)}>→</button>
+          <span>3D / GLOBUS</span>
+          <button type="button" aria-label="Herauszoomen" onClick={() => moveCamera(0, 0, 1.25)}>−</button>
+          <button type="button" aria-label="Hineinzoomen" onClick={() => moveCamera(0, 0, 0.8)}>+</button>
+        </div>,
+        toolbar,
+      )}
       {tip && (
         <div className="globe-tip globe-tip-floating" style={{ left: tip.x, top: tip.y }}>
           <span>{tip.code ? <CountryFlag code={tip.code} /> : "◌"}</span>

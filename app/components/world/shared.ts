@@ -9,6 +9,11 @@ export type WorldRendererProps = {
   onHover: (id: string | null) => void;
   onSelect: (meta: WorldCountryMeta) => void;
   onReady: () => void;
+  /**
+   * Ziel für die Bedienleiste. Sie muss außerhalb der runden Globusmaske
+   * hängen — dort schnitt `overflow: hidden` ihre Enden ab.
+   */
+  toolbar: HTMLElement | null;
 };
 
 /**

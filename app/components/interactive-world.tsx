@@ -46,6 +46,7 @@ function whenIdle(callback: () => void, timeout: number) {
 export function InteractiveWorld() {
   const stageRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState(620);
+  const [toolbar, setToolbar] = useState<HTMLDivElement | null>(null);
   // Kein Land vorausgewählt: die Statuskarte erscheint erst nach einem Klick.
   const [selected, setSelected] = useState<WorldCountryMeta | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -201,9 +202,12 @@ export function InteractiveWorld() {
             onHover={setHoveredId}
             onSelect={onSelect}
             onReady={onReady}
+            toolbar={toolbar}
           />
         )}
       </div>
+
+      <div className="globe-toolbar" ref={setToolbar} />
 
       {selected && (
         <div className="globe-interface" aria-live="polite">

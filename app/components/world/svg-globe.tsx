@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { geoGraticule10, geoOrthographic, geoPath } from "d3-geo";
 import { DEFAULT_COUNTRY } from "../../data/world-constants";
@@ -12,6 +13,7 @@ export default function SvgGlobe({
   selectedId,
   onSelect,
   onReady,
+  toolbar,
 }: WorldRendererProps) {
   const [rotation, setRotation] = useState<[number, number]>(
     [-DEFAULT_COUNTRY.latlng[1], -DEFAULT_COUNTRY.latlng[0]],
@@ -140,11 +142,14 @@ export default function SvgGlobe({
           </g>
         )}
       </svg>
+      {toolbar && createPortal(
       <div className="fallback-controls" role="group" aria-label="Weltkarte drehen">
-        <button type="button" aria-label="Welt nach Westen drehen" onClick={() => applyRotation([rotation[0] - 35, rotation[1]])}>←</button>
-        <span>SVG / 3D Fallback</span>
-        <button type="button" aria-label="Welt nach Osten drehen" onClick={() => applyRotation([rotation[0] + 35, rotation[1]])}>→</button>
-      </div>
+          <button type="button" aria-label="Welt nach Westen drehen" onClick={() => applyRotation([rotation[0] - 35, rotation[1]])}>←</button>
+          <span>SVG / 3D Fallback</span>
+          <button type="button" aria-label="Welt nach Osten drehen" onClick={() => applyRotation([rotation[0] + 35, rotation[1]])}>→</button>
+        </div>,
+        toolbar,
+      )}
     </div>
   );
 }
