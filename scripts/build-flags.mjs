@@ -9,7 +9,10 @@
  * Kopiert wird nur, was die Seite auch anzeigen kann: die Kürzel aus
  * public/data/world.json.
  *
- * Aufruf: node scripts/build-flags.mjs
+ * Braucht `flag-icons` und läuft nur auf Zuruf: die Flaggen liegen fertig im
+ * Repository, das Paket ist deshalb keine Abhängigkeit des Projekts.
+ *
+ * Aufruf: npm i -D flag-icons && node scripts/build-flags.mjs
  */
 import { mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
